@@ -95,7 +95,7 @@
 
 (defsetting site-name
   (deferred-tru "The name used for this instance of {0}."
-                (application-name-for-setting-descriptions))
+    (application-name-for-setting-descriptions))
   :default    "Metabase"
   :audit      :getter
   :visibility :settings-manager)
@@ -114,18 +114,32 @@
   :audit      :getter)
 
   ;; TODO: the settings on the BE will be done at the end, with help from the backend team
-  (defsetting help-link
+(defsetting help-link
   (deferred-tru "TODO")
-  :default    :metabase_default
+  :default    :default
   :type       :keyword
   :audit      :getter
   :visibility :public)
+
+(defn- normalize-help-link-custom-destination [^String s]
+  (let [;; remove trailing slashes
+        s (str/replace s #"/$" "")
+        ;; add protocol if missing
+        s (if (str/starts-with? s "http")
+            s
+            (str "http://" s))]
+    ;; check that the URL is valid
+    (when-not (u/url? s)
+      (throw (ex-info (tru "Invalid site URL: {0}" (pr-str s)) {:url (pr-str s)})))
+    s))
 
 (defsetting help-link-custom-destination
   (deferred-tru "TODO")
   :type       :string
   :visibility :public
-  :audit      :getter)
+  :setter     (fn [new-value]
+                (let [new-value (some-> new-value normalize-help-link-custom-destination)]
+                  (setting/set-value-of-type! :string :help-link-custom-destination new-value))))
 
 (defsetting dismissed-custom-dashboard-toast
   (deferred-tru "Toggle which is true after a user has dismissed the custom dashboard toast.")
@@ -188,7 +202,7 @@
   :type       ::uuid-nonce)
 
 (defn- normalize-site-url [^String s]
-  (let [ ;; remove trailing slashes
+  (let [;; remove trailing slashes
         s (str/replace s #"/$" "")
         ;; add protocol if missing
         s (if (str/starts-with? s "http")
@@ -205,8 +219,8 @@
 ;; It will also prepend `http://` to the URL if there's no protocol when it comes in
 (defsetting site-url
   (deferred-tru
-   (str "This URL is used for things like creating links in emails, auth redirects, and in some embedding scenarios, "
-        "so changing it could break functionality or get you locked out of this instance."))
+    (str "This URL is used for things like creating links in emails, auth redirects, and in some embedding scenarios, "
+         "so changing it could break functionality or get you locked out of this instance."))
   :visibility :public
   :audit      :getter
   :getter     (fn []
@@ -247,7 +261,7 @@
 
 (defsetting anon-tracking-enabled
   (deferred-tru "Enable the collection of anonymous usage data in order to help {0} improve."
-                (application-name-for-setting-descriptions))
+    (application-name-for-setting-descriptions))
   :type       :boolean
   :default    true
   :visibility :public
@@ -297,7 +311,7 @@
 
 (defsetting embedding-app-origin
   (deferred-tru "Allow this origin to embed the full {0} application"
-                (application-name-for-setting-descriptions))
+    (application-name-for-setting-descriptions))
   :feature    :embedding
   :visibility :public
   :audit      :getter)
@@ -367,16 +381,16 @@
 ;; TODO -- this isn't really a TTL at all. Consider renaming to something like `-min-duration`
 (defsetting query-caching-min-ttl
   (deferred-tru "{0} will cache all saved questions with an average query execution time longer than this many seconds:"
-                 (application-name-for-setting-descriptions))
+    (application-name-for-setting-descriptions))
   :type    :double
   :default 60.0
   :audit   :getter)
 
 (defsetting query-caching-ttl-ratio
   (deferred-tru
-   (str "To determine how long each saved question''s cached result should stick around, we take the query''s average "
-        "execution time and multiply that by whatever you input here. So if a query takes on average 2 minutes to run, "
-        "and you input 10 for your multiplier, its cache entry will persist for 20 minutes."))
+    (str "To determine how long each saved question''s cached result should stick around, we take the query''s average "
+         "execution time and multiply that by whatever you input here. So if a query takes on average 2 minutes to run, "
+         "and you input 10 for your multiplier, its cache entry will persist for 20 minutes."))
   :type    :integer
   :default 10
   :audit   :getter)
@@ -421,10 +435,10 @@
   :enabled?   premium-features/enable-whitelabeling?
   :audit      :getter
   :setter     (fn [new-value]
-                  (when new-value
-                    (when-not (u.fonts/available-font? new-value)
-                      (throw (ex-info (tru "Invalid font {0}" (pr-str new-value)) {:status-code 400}))))
-                  (setting/set-value-of-type! :string :application-font new-value)))
+                (when new-value
+                  (when-not (u.fonts/available-font? new-value)
+                    (throw (ex-info (tru "Invalid font {0}" (pr-str new-value)) {:status-code 400}))))
+                (setting/set-value-of-type! :string :application-font new-value)))
 
 (defsetting application-font-files
   (deferred-tru "Tell us where to find the file for each font weight. You don’t need to include all of them, but it’ll look better if you do.")
@@ -501,8 +515,8 @@
 
 (defsetting breakout-bin-width
   (deferred-tru
-   (str "When using the default binning strategy for a field of type Coordinate (such as Latitude and Longitude), "
-        "this number will be used as the default bin width (in degrees)."))
+    (str "When using the default binning strategy for a field of type Coordinate (such as Latitude and Longitude), "
+         "this number will be used as the default bin width (in degrees)."))
   :type    :double
   :default 10.0
   :audit   :getter)
@@ -523,8 +537,8 @@
 
 (defsetting show-homepage-data
   (deferred-tru
-   (str "Whether or not to display data on the homepage. "
-        "Admins might turn this off in order to direct users to better content than raw data"))
+    (str "Whether or not to display data on the homepage. "
+         "Admins might turn this off in order to direct users to better content than raw data"))
   :type       :boolean
   :default    true
   :visibility :authenticated
@@ -541,8 +555,8 @@
 
 (defsetting show-homepage-pin-message
   (deferred-tru
-   (str "Whether or not to display a message about pinning dashboards. It will also be hidden if any dashboards are "
-        "pinned. Admins might hide this to direct users to better content than raw data"))
+    (str "Whether or not to display a message about pinning dashboards. It will also be hidden if any dashboards are "
+         "pinned. Admins might hide this to direct users to better content than raw data"))
   :type       :boolean
   :default    true
   :visibility :authenticated
