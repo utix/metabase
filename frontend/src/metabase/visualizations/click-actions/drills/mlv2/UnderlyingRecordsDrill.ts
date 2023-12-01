@@ -32,7 +32,7 @@ export const UnderlyingRecordsDrill: Drill<
       section: "records",
       icon: "table_spaced",
       buttonType: "horizontal",
-      question: () => applyDrill(drill),
+      question: () => applyDrill(drill).setDisplay("table"),
     },
   ];
 };
