@@ -27,7 +27,7 @@ const ACTIONS: Record<
   },
 };
 
-export const SummarizeColumnDrill: Drill<Lib.SummarizeColumnDrillThruInfo> = ({
+export const summarizeColumnDrill: Drill<Lib.SummarizeColumnDrillThruInfo> = ({
   drill,
   drillDisplayInfo,
   applyDrill,

@@ -5,9 +5,9 @@ import type {
 } from "metabase/visualizations/types/click-actions";
 import * as Lib from "metabase-lib";
 import type Question from "metabase-lib/Question";
-import { getFilterPopover } from "./utils";
+import { getFilterPopover } from "../../components/DrillFilterPicker";
 
-export const QuickFilterDrill: Drill<Lib.QuickFilterDrillThruInfo> = ({
+export const quickFilterDrill: Drill<Lib.QuickFilterDrillThruInfo> = ({
   question,
   drill,
   drillDisplayInfo,

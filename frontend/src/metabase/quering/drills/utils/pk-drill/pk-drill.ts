@@ -2,12 +2,12 @@ import { t } from "ttag";
 import type { Drill } from "metabase/visualizations/types/click-actions";
 import type * as Lib from "metabase-lib";
 
-export const ObjectDetailsFkDrill: Drill<Lib.FKDetailsDrillThruInfo> = ({
+export const pkDrill: Drill<Lib.PKDrillThruInfo> = ({
   drill,
   drillDisplayInfo,
   applyDrill,
 }) => {
-  const { objectId, isManyPks } = drillDisplayInfo;
+  const { objectId } = drillDisplayInfo;
 
   return [
     {
@@ -17,8 +17,7 @@ export const ObjectDetailsFkDrill: Drill<Lib.FKDetailsDrillThruInfo> = ({
       buttonType: "horizontal",
       icon: "expand",
       default: true,
-      question: () => applyDrill(drill, objectId).setDefaultDisplay(),
-      ...(isManyPks ? { extra: () => ({ objectId }) } : {}),
+      question: () => applyDrill(drill, objectId),
     },
   ];
 };

@@ -8,7 +8,7 @@ import type * as Lib from "metabase-lib";
 
 const isShortTableName = (tableName: string) => tableName.length <= 20;
 
-export const UnderlyingRecordsDrill: Drill<
+export const underlyingRecordsDrill: Drill<
   Lib.UnderlyingRecordsDrillThruInfo
 > = ({ drill, drillDisplayInfo, applyDrill }): QuestionChangeClickAction[] => {
   const { tableName, rowCount } = drillDisplayInfo;

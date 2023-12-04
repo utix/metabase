@@ -3,7 +3,7 @@ import type { ClickActionPopoverProps } from "metabase/visualizations/types";
 import * as Lib from "metabase-lib";
 import type Question from "metabase-lib/Question";
 
-interface FilterPopoverOpts {
+interface FilterPopoverProps {
   question: Question;
   query: Lib.Query;
   stageIndex: number;
@@ -17,7 +17,7 @@ export function getFilterPopover({
   column,
   stageIndex,
   initialFilter,
-}: FilterPopoverOpts) {
+}: FilterPopoverProps) {
   return function FilterDrillPopover({
     onChangeCardAndRun,
     onClose,

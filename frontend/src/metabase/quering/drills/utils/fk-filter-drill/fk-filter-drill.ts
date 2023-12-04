@@ -7,7 +7,7 @@ import {
 import type { Drill } from "metabase/visualizations/types/click-actions";
 import type * as Lib from "metabase-lib";
 
-export const FKFilterDrill: Drill<Lib.FKFilterDrillThruInfo> = ({
+export const fkFilterDrill: Drill<Lib.FKFilterDrillThruInfo> = ({
   drill,
   drillDisplayInfo,
   applyDrill,

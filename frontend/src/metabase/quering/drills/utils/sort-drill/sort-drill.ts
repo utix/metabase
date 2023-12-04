@@ -22,7 +22,7 @@ const ACTIONS: Record<string, ClickActionBase> = {
   },
 };
 
-export const SortDrill: Drill<Lib.SortDrillThruInfo> = ({
+export const sortDrill: Drill<Lib.SortDrillThruInfo> = ({
   drill,
   drillDisplayInfo,
   applyDrill,

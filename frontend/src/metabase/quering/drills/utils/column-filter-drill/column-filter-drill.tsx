@@ -1,9 +1,9 @@
 import { t } from "ttag";
 import type { Drill } from "metabase/visualizations/types/click-actions";
 import * as Lib from "metabase-lib";
-import { getFilterPopover } from "./utils";
+import { getFilterPopover } from "../../components/DrillFilterPicker";
 
-export const ColumnFilterDrill: Drill<Lib.ColumnFilterDrillThruInfo> = ({
+export const columnFilterDrill: Drill<Lib.ColumnFilterDrillThruInfo> = ({
   question,
   drill,
 }) => {

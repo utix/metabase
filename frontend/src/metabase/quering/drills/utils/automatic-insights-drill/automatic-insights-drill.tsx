@@ -10,7 +10,7 @@ import {
   getComparisonDashboardUrl,
 } from "metabase-lib/urls";
 
-export const AutomaticInsightsDrill: Drill = ({ drill, applyDrill }) => {
+export const automaticInsightsDrill: Drill = ({ drill, applyDrill }) => {
   const actions: RegularClickAction[] = [
     {
       name: "exploratory-dashboard",

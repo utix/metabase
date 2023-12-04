@@ -1,15 +1,17 @@
-import { t } from "ttag";
 import type { Drill } from "metabase/visualizations/types";
 import type * as Lib from "metabase-lib";
 
-export const ZoomGeoDrill: Drill<Lib.ZoomDrillThruInfo> = ({
+export const zoomInTimeseriesDrill: Drill<Lib.ZoomTimeseriesDrillThruInfo> = ({
   drill,
+  drillDisplayInfo,
   applyDrill,
 }) => {
+  const { displayName } = drillDisplayInfo;
+
   return [
     {
-      name: "zoom-in.geo",
-      title: t`Zoom in`,
+      name: "timeseries-zoom",
+      title: displayName,
       section: "zoom",
       icon: "zoom_in",
       buttonType: "horizontal",

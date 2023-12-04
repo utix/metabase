@@ -1,15 +1,12 @@
 import { t } from "ttag";
-import { zoomInRow } from "metabase/query_builder/actions";
 import type { Drill } from "metabase/visualizations/types/click-actions";
 import type * as Lib from "metabase-lib";
 
-export const ObjectDetailsZoomDrill: Drill<Lib.ZoomDrillThruInfo> = ({
+export const fkDetailsDrill: Drill<Lib.FKDetailsDrillThruInfo> = ({
   drill,
   drillDisplayInfo,
-  clicked,
   applyDrill,
 }) => {
-  const dashboard = clicked?.extraData?.dashboard;
   const { objectId, isManyPks } = drillDisplayInfo;
 
   return [
@@ -20,9 +17,7 @@ export const ObjectDetailsZoomDrill: Drill<Lib.ZoomDrillThruInfo> = ({
       buttonType: "horizontal",
       icon: "expand",
       default: true,
-      ...(dashboard
-        ? { question: () => applyDrill(drill, objectId) }
-        : { action: () => zoomInRow({ objectId }) }),
+      question: () => applyDrill(drill, objectId).setDefaultDisplay(),
       ...(isManyPks ? { extra: () => ({ objectId }) } : {}),
     },
   ];

@@ -38,7 +38,7 @@ const CATEGORIES: ClickActionCategory[] = [
   },
 ];
 
-export const PivotDrill: Drill = ({ drill, applyDrill }) => {
+export const pivotDrill: Drill = ({ drill, applyDrill }) => {
   const drillDetails = Lib.pivotDrillDetails(drill);
 
   const actions = CATEGORIES.flatMap(category => {
