@@ -5,16 +5,20 @@ import type {
 } from "metabase/visualizations/types/click-actions";
 import * as Lib from "metabase-lib";
 import type Question from "metabase-lib/Question";
-import { getFilterPopover } from "../../components/DrillFilterPicker";
+import { getFilterPopover } from "../filter-drill";
 
 export const quickFilterDrill: Drill<Lib.QuickFilterDrillThruInfo> = ({
   question,
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { value, operators } = drillDisplayInfo;
-  const { query, stageIndex, column } = Lib.filterDrillDetails(drill);
+  const { value, operators } = drillInfo;
+  const {
+    query,
+    stageNumber: stageIndex,
+    column,
+  } = Lib.filterDrillDetails(drill);
 
   return operators.map(operator => ({
     name: operator,

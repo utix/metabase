@@ -151,6 +151,7 @@ export type Drill<
   question: Question;
   drill: Lib.DrillThru;
   drillInfo: T;
+  clicked?: Lib.ClickObject;
   applyDrill: (drill: Lib.DrillThru, ...args: any[]) => Question;
 }) => ClickAction[];
 

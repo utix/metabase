@@ -29,10 +29,10 @@ const ACTIONS: Record<
 
 export const summarizeColumnDrill: Drill<Lib.SummarizeColumnDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { aggregations } = drillDisplayInfo;
+  const { aggregations } = drillInfo;
 
   return aggregations.map(operator => ({
     name: operator,

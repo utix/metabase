@@ -9,10 +9,10 @@ import type * as Lib from "metabase-lib";
 
 export const fkFilterDrill: Drill<Lib.FKFilterDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { tableName, columnName } = drillDisplayInfo;
+  const { tableName, columnName } = drillInfo;
   const tableTitle = pluralize(tableName);
   const columnTitle = singularize(stripId(columnName));
 

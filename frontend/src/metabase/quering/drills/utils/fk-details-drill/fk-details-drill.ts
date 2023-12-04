@@ -4,10 +4,10 @@ import type * as Lib from "metabase-lib";
 
 export const fkDetailsDrill: Drill<Lib.FKDetailsDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { objectId, isManyPks } = drillDisplayInfo;
+  const { objectId, isManyPks } = drillInfo;
 
   return [
     {

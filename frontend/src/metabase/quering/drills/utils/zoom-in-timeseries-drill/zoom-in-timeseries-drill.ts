@@ -3,10 +3,10 @@ import type * as Lib from "metabase-lib";
 
 export const zoomInTimeseriesDrill: Drill<Lib.ZoomTimeseriesDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { displayName } = drillDisplayInfo;
+  const { displayName } = drillInfo;
 
   return [
     {

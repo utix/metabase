@@ -24,10 +24,10 @@ const ACTIONS: Record<string, ClickActionBase> = {
 
 export const sortDrill: Drill<Lib.SortDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   applyDrill,
 }) => {
-  const { directions } = drillDisplayInfo;
+  const { directions } = drillInfo;
 
   return directions.map(direction => ({
     ...ACTIONS[direction],

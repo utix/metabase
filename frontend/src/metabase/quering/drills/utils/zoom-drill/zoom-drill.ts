@@ -5,12 +5,12 @@ import type * as Lib from "metabase-lib";
 
 export const zoomDrill: Drill<Lib.ZoomDrillThruInfo> = ({
   drill,
-  drillDisplayInfo,
+  drillInfo,
   clicked,
   applyDrill,
 }) => {
   const dashboard = clicked?.extraData?.dashboard;
-  const { objectId, isManyPks } = drillDisplayInfo;
+  const { objectId, isManyPks } = drillInfo;
 
   return [
     {

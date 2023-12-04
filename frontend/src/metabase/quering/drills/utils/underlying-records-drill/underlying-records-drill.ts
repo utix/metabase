@@ -10,8 +10,8 @@ const isShortTableName = (tableName: string) => tableName.length <= 20;
 
 export const underlyingRecordsDrill: Drill<
   Lib.UnderlyingRecordsDrillThruInfo
-> = ({ drill, drillDisplayInfo, applyDrill }): QuestionChangeClickAction[] => {
-  const { tableName, rowCount } = drillDisplayInfo;
+> = ({ drill, drillInfo, applyDrill }): QuestionChangeClickAction[] => {
+  const { tableName, rowCount } = drillInfo;
 
   const tableTitle =
     tableName && isShortTableName(tableName)
