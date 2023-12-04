@@ -25,7 +25,7 @@ export type MetricMetadata = unknown & { _opaque: typeof MetricMetadata };
 declare const AggregationClause: unique symbol;
 export type AggregationClause = unknown & { _opaque: typeof AggregationClause };
 
-export type Aggregatable = AggregationClause | MetricMetadata;
+export type Aggregable = AggregationClause | MetricMetadata;
 
 declare const AggregationOperator: unique symbol;
 export type AggregationOperator = unknown & {
@@ -45,6 +45,9 @@ export type OrderByDirection = "asc" | "desc";
 
 declare const FilterClause: unique symbol;
 export type FilterClause = unknown & { _opaque: typeof FilterClause };
+
+declare const FilterOperator: unique symbol;
+export type FilterOperator = unknown & { _opaque: typeof FilterOperator };
 
 declare const Join: unique symbol;
 export type Join = unknown & { _opaque: typeof Join };
@@ -304,26 +307,23 @@ export type FKFilterDrillThruInfo =
 export type DistributionDrillThruInfo =
   BaseDrillThruInfo<"drill-thru/distribution">;
 
+export type SortDrillThruDirection = "asc" | "desc";
+
 export type SortDrillThruInfo = BaseDrillThruInfo<"drill-thru/sort"> & {
-  directions: Array<"asc" | "desc">;
+  directions: Array<SortDrillThruDirection>;
 };
 
-export type SummarizeColumnDrillAggregationOperator =
-  | "sum"
-  | "avg"
-  | "distinct";
+export type SummarizeColumnDrillThruOperator = "sum" | "avg" | "distinct";
 
 export type SummarizeColumnDrillThruInfo =
   BaseDrillThruInfo<"drill-thru/summarize-column"> & {
-    aggregations: Array<SummarizeColumnDrillAggregationOperator>;
+    aggregations: Array<SummarizeColumnDrillThruOperator>;
   };
 export type SummarizeColumnByTimeDrillThruInfo =
   BaseDrillThruInfo<"drill-thru/summarize-column-by-time">;
 
 export type ColumnFilterDrillThruInfo =
-  BaseDrillThruInfo<"drill-thru/column-filter"> & {
-    initialOp: { short: string } | null; // null gets returned for date column
-  };
+  BaseDrillThruInfo<"drill-thru/column-filter">;
 
 export type UnderlyingRecordsDrillThruInfo =
   BaseDrillThruInfo<"drill-thru/underlying-records"> & {
@@ -354,21 +354,33 @@ export type DrillThruDisplayInfo =
 export type FilterDrillDetails = {
   query: Query;
   column: ColumnMetadata;
-  stageIndex: number;
+  stageNumber: number;
 };
 
-export type PivotDrillDetails = {
-  query: Query;
-  stageIndex: number;
-  columns: ColumnMetadata[];
-};
+export type PivotType = "category" | "location" | "time";
 
-export interface Dimension {
+export interface ClickObjectDimension {
+  value: RowValue;
   column: DatasetColumn;
-  value?: RowValue;
 }
 
-export type DataRow = Array<{
-  col: DatasetColumn | ColumnMetadata | null;
+export interface ClickObjectDataRow {
+  col: DatasetColumn | null; // can be null for custom columns
   value: RowValue;
-}>;
+}
+
+export interface ClickObject {
+  value?: RowValue;
+  column?: DatasetColumn;
+  dimensions?: ClickObjectDimension[];
+  event?: MouseEvent;
+  element?: Element;
+  seriesIndex?: number;
+  settings?: Record<string, unknown>;
+  origin?: {
+    row: RowValue;
+    cols: DatasetColumn[];
+  };
+  extraData?: Record<string, unknown>;
+  data?: ClickObjectDataRow[];
+}
