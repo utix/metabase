@@ -35,7 +35,7 @@ export function drillThru(
   query: Query,
   stageIndex: number,
   drillThru: DrillThru,
-  ...args: any[]
+  ...args: unknown[]
 ): Query {
   return ML.drill_thru(query, stageIndex, drillThru, ...args);
 }

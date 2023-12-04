@@ -147,13 +147,12 @@ export const isRegularClickAction = (
 
 export type Drill<
   T extends Lib.DrillThruDisplayInfo = Lib.DrillThruDisplayInfo,
-> = (
-  options: ClickActionProps & {
-    drill: Lib.DrillThru;
-    drillDisplayInfo: T;
-    applyDrill: (drill: Lib.DrillThru, ...args: any[]) => Question;
-  },
-) => ClickAction[];
+> = (options: {
+  question: Question;
+  drill: Lib.DrillThru;
+  drillInfo: T;
+  applyDrill: (drill: Lib.DrillThru, ...args: any[]) => Question;
+}) => ClickAction[];
 
 export interface ModeFooterComponentProps {
   lastRunCard: Card;
