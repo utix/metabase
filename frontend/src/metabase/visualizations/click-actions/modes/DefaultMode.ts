@@ -5,6 +5,7 @@ import { DashboardClickAction } from "../actions/DashboardClickAction";
 
 export const DefaultMode: QueryClickActionsMode = {
   name: "default",
+  hasDrills: true,
   clickActions: [
     HideColumnAction,
     ColumnFormattingAction,

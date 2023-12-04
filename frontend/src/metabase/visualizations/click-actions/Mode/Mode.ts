@@ -32,7 +32,7 @@ export class Mode {
     const question = this._question;
     const props = { question, settings, clicked, extraData };
     const actions = [
-      ...queryDrill(question, clicked),
+      ...(mode.hasDrills ? queryDrill(question, clicked) : []),
       ...(mode.clickActions?.flatMap(drill => drill(props)) ?? []),
     ];
 

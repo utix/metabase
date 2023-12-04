@@ -4,6 +4,7 @@ import { DefaultMode } from "./DefaultMode";
 
 export const NativeMode: QueryClickActionsMode = {
   name: "native",
+  hasDrills: false,
   clickActions: DefaultMode.clickActions,
   fallback: NativeQueryClickFallback,
 };

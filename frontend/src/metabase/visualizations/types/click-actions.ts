@@ -172,7 +172,7 @@ export interface ModeFooterComponentProps {
 
 export interface QueryClickActionsMode {
   name: string;
-
+  hasDrills: boolean;
   clickActions: LegacyDrill[];
   fallback?: LegacyDrill;
   ModeFooter?: (props: ModeFooterComponentProps) => JSX.Element | null;
