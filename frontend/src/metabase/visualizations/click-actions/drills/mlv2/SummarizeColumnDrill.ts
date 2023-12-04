@@ -37,7 +37,7 @@ export const SummarizeColumnDrill: Drill<Lib.SummarizeColumnDrillThruInfo> = ({
   return aggregations.map(operator => ({
     name: operator,
     ...ACTIONS[operator],
-    question: () => applyDrill(drill, operator),
+    question: () => applyDrill(drill, operator).setDefaultDisplay(),
     action: () => (dispatch: Dispatch) =>
       // HACK: drill through closes sidebars, so open sidebar asynchronously
       setTimeout(() => dispatch({ type: "metabase/qb/EDIT_SUMMARY" })),

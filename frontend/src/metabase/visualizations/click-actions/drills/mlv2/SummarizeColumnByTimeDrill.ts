@@ -12,7 +12,7 @@ export const SummarizeColumnByTimeDrill: Drill<
       section: "summarize",
       icon: "line",
       buttonType: "horizontal",
-      question: () => applyDrill(drill),
+      question: () => applyDrill(drill).setDefaultDisplay(),
     },
   ];
 };

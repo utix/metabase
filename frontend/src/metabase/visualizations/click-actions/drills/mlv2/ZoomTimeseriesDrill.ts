@@ -15,7 +15,7 @@ export const ZoomTimeseriesDrill: Drill<Lib.ZoomTimeseriesDrillThruInfo> = ({
       section: "zoom",
       icon: "zoom_in",
       buttonType: "horizontal",
-      question: () => applyDrill(drill),
+      question: () => applyDrill(drill).setDefaultDisplay(),
     },
   ];
 };

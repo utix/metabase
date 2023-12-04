@@ -17,7 +17,7 @@ export const ObjectDetailsFkDrill: Drill<Lib.FKDetailsDrillThruInfo> = ({
       buttonType: "horizontal",
       icon: "expand",
       default: true,
-      question: () => applyDrill(drill, objectId),
+      question: () => applyDrill(drill, objectId).setDefaultDisplay(),
       ...(isManyPks ? { extra: () => ({ objectId }) } : {}),
     },
   ];
