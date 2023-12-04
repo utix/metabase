@@ -149,6 +149,8 @@ export type Drill<
   T extends Lib.DrillThruDisplayInfo = Lib.DrillThruDisplayInfo,
 > = (options: {
   question: Question;
+  query: Lib.Query;
+  stageIndex: number;
   drill: Lib.DrillThru;
   drillInfo: T;
   clicked?: Lib.ClickObject;

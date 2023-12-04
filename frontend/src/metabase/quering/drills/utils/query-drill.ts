@@ -26,6 +26,13 @@ export function queryDrill(
   return drills.flatMap(drill => {
     const drillInfo = Lib.displayInfo(query, stageIndex, drill);
     const drillHandler = DRILLS[drillInfo.type];
-    return drillHandler({ question, drill, drillInfo, applyDrill });
+    return drillHandler({
+      question,
+      query,
+      stageIndex,
+      drill,
+      drillInfo,
+      applyDrill,
+    });
   });
 }

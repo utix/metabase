@@ -17,7 +17,7 @@ export function availableDrillThrus(
   stageIndex: number,
   column: ColumnMetadata | DatasetColumn | undefined,
   value: RowValue | undefined,
-  row: ClickObjectDataRow | undefined,
+  row: ClickObjectDataRow[] | undefined,
   dimensions: ClickObjectDimension[] | undefined,
 ): DrillThru[] {
   return ML.available_drill_thrus(
