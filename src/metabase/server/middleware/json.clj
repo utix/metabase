@@ -7,10 +7,16 @@
    [metabase.util.date-2 :as u.date]
    [ring.middleware.json :as ring.json]
    [ring.util.io :as rui]
+   [ring.util.request :as req]
    [ring.util.response :as response])
   (:import
    (com.fasterxml.jackson.core JsonGenerator)
-   (java.io BufferedWriter OutputStream OutputStreamWriter)
+   (java.io
+    BufferedWriter
+    ByteArrayInputStream
+    InputStream
+    OutputStream
+    OutputStreamWriter)
    (java.nio.charset StandardCharsets)
    (java.time.temporal Temporal)))
 
@@ -68,6 +74,75 @@
         (respond ring.json/default-malformed-response))
       (handler request respond raise))))
 
+(require '[jsonista.core :as jsonista])
+
+(def mapper
+  (jsonista/object-mapper
+   {:decode-key-fn keyword}))
+
+(defn read-json [request]
+  (if (#'ring.json/json-request? request)
+    (let [encoding (or (req/character-encoding request) "UTF-8")]
+      (try
+        [true (jsonista/read-value (:body request) mapper)]
+        (catch Exception _
+          [false nil])))
+    [false nil]))
+
+(defn wrap-json-body-2
+  [handler]
+  (fn [request respond raise]
+    (if-let [[valid? json] (read-json request {:keywords? true})]
+      (if valid?
+        (handler (assoc request :body json) respond raise)
+        (respond ring.json/default-malformed-response))
+      (handler request respond raise))))
+
+(#'ring.json/read-json
+ {:headers {"content-type" "application/json"}
+  :body (io/input-stream (.getBytes "{\"a\": [1]}"))}
+ {:keywords? true})
+
+(do
+  (require '[criterium.core :as criterium])
+  (require '[clojure.string :as str])
+  (require '[clojure.java.io :as io])
+  (defn bench! []
+    (let [json-string (slurp "jest.tz.unit.conf.json")
+          long-json-string (str "["
+                                (str/join ", " (repeat 1000 json-string))
+                                "]")]
+      (criterium/quick-bench
+          (-> (#'ring.json/read-json {:headers {"content-type" "application/json"}
+                                      :body (io/input-stream (.getBytes long-json-string))} {:keywords? true})
+              second
+              (nth 999)
+              keys))
+      (criterium/quick-bench
+          (->  (read-json {:headers {"content-type" "application/json"}
+                           :body (io/input-stream (.getBytes long-json-string))})
+               second
+               (nth 999)
+               keys))))
+  (bench!))
+
+((wrap-json-body (fn [& args] [args]))
+ {:headers {"content-type" "application/json"}
+  :body "{'a': [1]}"}
+ (fn [& args] (println "req" args))
+ (fn [& args] (println "raise" args)))
+
+;; (defn- read-json [request & [{:keys [keywords? bigdecimals? key-fn]}]]
+;;   (if (json-request? request)
+;;     (if-let [^InputStream body (:body request)]
+;;       (let [^String encoding (or (character-encoding request)
+;;                                  "UTF-8")
+;;             body-reader (java.io.InputStreamReader. body encoding)]
+;;         (binding [parse/*use-bigdecimals?* bigdecimals?]
+;;           (try
+;;             [true (json/parse-stream body-reader (or key-fn keywords?))]
+;;             (catch com.fasterxml.jackson.core.JsonParseException ex
+;;               [false nil])))))))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                            Streaming JSON Responses                                            |

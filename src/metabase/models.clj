@@ -126,7 +126,6 @@
  [perms Permissions]
  [perms-group PermissionsGroup]
  [perms-group-membership PermissionsGroupMembership]
- [perms-revision PermissionsRevision]
  [a-perm-revision ApplicationPermissionsRevision]
  [persisted-info PersistedInfo]
  [pulse Pulse]

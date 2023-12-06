@@ -20,7 +20,7 @@
   Permissions paths use a prefix system where a User is normally allowed to perform any action if one of their Groups
   has *any* permissions entry that is a prefix for the permission required to perform that action. For example, if
   reading Database 1 requires the permission `/db/1/read/`, then the current User may perform that action if they have
-  `/db/1/read/` permissions, or if they have `/db/1/`, or even full `/` superuser permissions.
+  `/db/1/read/`, `/db/1/`, or full superuser permissions: `/`.
 
   This prefix system allows us to easily and efficiently query the application database to find relevant matching
   permissions matching an path or path using `LIKE`; see [[metabase.models.database/pre-delete]] for
@@ -35,7 +35,7 @@
 
   There are two main types of permissions:
 
-  * _data permissions_ -- permissions to view, update, or run ad-hoc or SQL queries against a Database or Table.
+  * _Data permissions_ -- permissions to view, update, or run ad-hoc or SQL queries against a Database or Table.
 
   * _Collection permissions_ -- permissions to view/curate/etc. an individual [[metabase.models.collection]] and the
     items inside it. Collection permissions apply to individual Collections and to any non-Collection items inside that
@@ -126,24 +126,24 @@
   [[metabase-enterprise.advanced-permissions.models.permissions.block-permissions]] determines whether the current
   User has permissions to run the current query. Permissions are as follows:
 
-  | Data perms? | Coll perms? | Block? | Segmented? | Can run? |
-  | ----------- | ----------- | ------ | ---------- | -------- |
-  |          no |          no |     no |         no |       ⛔ |
-  |          no |          no |     no |        yes |       ⚠️ |
-  |          no |          no |    yes |         no |       ⛔ |
-  |          no |          no |    yes |        yes |       ⚠️ |
-  |          no |         yes |     no |         no |       ✅ |
-  |          no |         yes |     no |        yes |       ⚠️ |
-  |          no |         yes |    yes |         no |       ⛔ |
-  |          no |         yes |    yes |        yes |       ⚠️ |
-  |         yes |          no |     no |         no |       ✅ |
-  |         yes |          no |     no |        yes |       ✅ |
-  |         yes |          no |    yes |         no |       ✅ |
-  |         yes |          no |    yes |        yes |       ✅ |
-  |         yes |         yes |     no |         no |       ✅ |
-  |         yes |         yes |     no |        yes |       ✅ |
-  |         yes |         yes |    yes |         no |       ✅ |
-  |         yes |         yes |    yes |        yes |       ✅ |
+  | Data perms? | Segmented? | Coll perms? | Block? | Can run? |
+  | ----------- | ---------- | ----------- | ------ | -------- |
+  |         yes |        yes |         yes |    yes |       ✅ |
+  |         yes |        yes |         yes |     no |       ✅ |
+  |         yes |        yes |          no |    yes |       ✅ |
+  |         yes |        yes |          no |     no |       ✅ |
+  |         yes |         no |         yes |    yes |       ✅ |
+  |         yes |         no |         yes |     no |       ✅ |
+  |         yes |         no |          no |    yes |       ✅ |
+  |         yes |         no |          no |     no |       ✅ |
+  |          no |        yes |         yes |    yes |       ⚠️ |
+  |          no |        yes |         yes |     no |       ⚠️ |
+  |          no |        yes |          no |    yes |       ⚠️ |
+  |          no |        yes |          no |     no |       ⚠️ |
+  |          no |         no |         yes |    yes |       ⛔ |
+  |          no |         no |         yes |     no |       ✅ |
+  |          no |         no |          no |    yes |       ⛔ |
+  |          no |         no |          no |     no |       ⛔ |
 
   (`⚠️` = runs in sandboxed mode)
 
@@ -817,15 +817,17 @@
 ;;; |                                                  GRAPH FETCH                                                   |
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
+(def all-permission {:data       {:native :write :schemas :all}
+                     :download   {:native :full  :schemas :full}
+                     :data-model {               :schemas :all}
+                     :details :yes})
+
 (defn- all-permissions
   "Handle '/' permission"
   [db-ids]
   (into {}
         (map (fn [db-id]
-               [db-id {:data       {:native :write :schemas :all}
-                       :download   {:native :full  :schemas :full}
-                       :data-model {               :schemas :all}
-                       :details :yes}])
+               [db-id all-permission])
              db-ids)))
 
 (defn- permissions-by-group-ids [where-clause]
@@ -843,10 +845,9 @@
   graph)
 
 (defn- post-process-graph [graph]
-  (->>
-   graph
-   (walk/postwalk-replace {{:query {:schemas :all}}             {:query {:schemas :all :native :none}}
-                           {:query {:schemas :all :native nil}} {:query {:schemas :all :native :none}}})))
+  (walk/postwalk-replace {{:query {:schemas :all}}             {:query {:schemas :all :native :none}}
+                          {:query {:schemas :all :native nil}} {:query {:schemas :all :native :none}}}
+                         graph))
 
 (mu/defn generate-graph :- :map
   "Used to generation permission graph from parsed permission paths of v1 and v2 permission graphs for the api layer."
@@ -887,6 +888,44 @@
                                                       paths))))]
     {:revision (perms-revision/latest-id)
      :groups   (generate-graph @db-ids group-id->v1-paths)}))
+
+(comment
+
+  ;; db id:
+  (defn db-id->where-clause [id]
+    [:like :object (h2x/literal (str "%/db/" id "/%"))])
+
+  (map :id (t2/select [:model/Database :id]))
+
+  (let [db-ids #{13371337}
+        clause (into
+                [:or [:= :object (h2x/literal "/")]]
+                (map db-id->where-clause db-ids))
+        group-id->paths (permissions-by-group-ids clause)]
+    (generate-graph db-ids group-id->paths))
+   ;; Just db id 13371337, for all groups:
+   ;; => {2 {13371337 {:data {:native :write, :schemas :all}, :download {:native :full, :schemas :full}, :data-model {:schemas :all}, :details :yes}}, 1 {13371337 {:download {:native :full, :schemas :full}, :data {:native :write, :schemas :all}}}}
+
+  (defn group-id->where-clause [id] [:= :group_id id])
+
+  (let [db-ids (t2/select-pks-set :model/Database)
+        group-ids [1]
+        clause (vec (concat
+                     [:or
+                      #_[:= :object (h2x/literal "/")]]
+                     (map group-id->where-clause group-ids)
+                     #_(map db-id->where-clause db-ids)))
+        _ (def c clause)
+        group-id->paths (select-keys
+                         (permissions-by-group-ids clause)
+                         group-ids)]
+    [group-id->paths
+     (generate-graph db-ids group-id->paths)])
+
+  ;; schema
+
+
+  )
 
 (defn data-perms-graph-v2
   "Fetch a graph representing the current *data* permissions status for every Group and all permissioned databases.
@@ -1491,7 +1530,7 @@
    "\n" (trs "TO:")   (u/pprint-to-str 'blue    new)))
 
 (mu/defn update-data-perms-graph!
-  "Update the *data* permissions graph, making any changes necessary to make it match NEW-GRAPH.
+  "Update the *data* permissions graph, making any changes necessary to make it match `new-graph`.
    This should take in a graph that is exactly the same as the one obtained by `graph` with any changes made as
    needed. The graph is revisioned, so if it has been updated by a third party since you fetched it this function will
    fail and return a 409 (Conflict) exception. If nothing needs to be done, this function returns `nil`; otherwise it
@@ -1510,12 +1549,13 @@
        (t2/with-transaction [_conn]
         (doseq [[group-id changes] new]
           (update-group-permissions! group-id changes))
-        (save-perms-revision! PermissionsRevision (:revision old-graph) old new)
+        (save-perms-revision! :model/PermissionsRevision (:revision old-graph) old new)
         (delete-impersonations-if-needed-after-permissions-change! new)
         (delete-gtaps-if-needed-after-permissions-change! new)))))
 
   ;; The following arity is provided soley for convenience for tests/REPL usage
   ([ks :- [:vector :any] new-value]
+   (assert (not config/is-prod?) "This arity is not callable from prod.")
    (update-data-perms-graph! (assoc-in (data-perms-graph) (cons :groups ks) new-value))))
 
 (mu/defn update-execution-perms-graph!
@@ -1536,7 +1576,7 @@
        (t2/with-transaction [_conn]
          (doseq [[group-id changes] new]
            (update-execution-permissions! group-id changes))
-         (save-perms-revision! PermissionsRevision (:revision old-graph) old new)))))
+         (save-perms-revision! :model/PermissionsRevision (:revision old-graph) old new)))))
 
   ;; The following arity is provided soley for convenience for tests/REPL usage
   ([ks :- [:any] new-value]

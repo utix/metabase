@@ -7,8 +7,11 @@
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
    [clojure.walk :as walk]
+   [malli.core :as mc]
+   [malli.transform :as mtx]
    [metabase.util :as u]
-   [metabase.util.i18n :refer [trs]]))
+   [metabase.util.i18n :refer [trs]]
+   [malli.generator :as mg]))
 
 (set! *warn-on-reflection* true)
 
@@ -32,14 +35,22 @@
 ;;; --------------------------------------------------- Common ----------------------------------------------------
 
 (defn- kw-int->int-decoder [kw-int]
-  (if (int? kw-int)
-    kw-int
-    (parse-long (name kw-int))))
+  (if (keyword? kw-int)
+    (try (parse-long (name kw-int))
+         (catch Exception _ kw-int))
+    kw-int))
 
 (def DecodableKwInt
   "Integer malli schema that knows how to decode itself from the :123 sort of shape used in perm-graphs"
   [:int {:decode/perm-graph kw-int->int-decoder}])
 
+(do (require '[hyperfiddle.rcf :as rcf]) (rcf/enable!))
+(rcf/tests "nocommit tests"
+           (mc/decode DecodableKwInt
+                      :12
+                      (mtx/transformer
+                       mtx/string-transformer
+                       (mtx/transformer {:name :perm-graph}))) := 12)
 (def ^:private Id DecodableKwInt)
 (def ^:private GroupId DecodableKwInt)
 
@@ -67,7 +78,8 @@
 
 (def ^:private SchemaGraph
   [:map-of
-   [:string {:decode/perm-graph name}]
+   [:string {:decode/perm-graph name
+             :gen/fmap '(fn [x] (str (rand-nth ["public" "users" "orders"]) "_schema" x))}]
    SchemaPerms])
 
 (def ^:private Schemas
