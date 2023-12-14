@@ -49,9 +49,12 @@ const FileUploadStatusContent = ({
   );
   const isVisible = useStatusVisibility(isActive);
 
-  const { data: collection, isLoading } = useCollectionQuery({
-    id: collectionId,
-  });
+  // const { data: collection, isLoading } = useCollectionQuery({
+  //   id: collectionId,
+  // });
+
+  const isLoading = false;
+  const collection = { name: "model" }
 
   if (!isVisible || isLoading || !collection) {
     return null;

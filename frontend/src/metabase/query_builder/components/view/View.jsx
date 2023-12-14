@@ -4,6 +4,7 @@ import { Motion, spring } from "react-motion";
 import _ from "underscore";
 import { t } from "ttag";
 
+import Dropzone from 'react-dropzone';
 import ExplicitSize from "metabase/components/ExplicitSize";
 import Popover from "metabase/components/Popover";
 import QueryValidationError from "metabase/query_builder/components/QueryValidationError";
@@ -12,6 +13,9 @@ import LoadingAndErrorWrapper from "metabase/components/LoadingAndErrorWrapper";
 import Toaster from "metabase/components/Toaster";
 
 import * as Lib from "metabase-lib";
+import { UploadOverlay } from "metabase/collections/components/UploadOverlay";
+import { getComposedDragProps } from "metabase/collections/containers/utils";
+
 import NativeQuery from "metabase-lib/queries/NativeQuery";
 import StructuredQuery from "metabase-lib/queries/StructuredQuery";
 
@@ -445,6 +449,7 @@ class View extends Component {
       isShowingToaster,
       isHeaderVisible,
       updateQuestion,
+      uploadFile,
     } = this.props;
 
     // if we don't have a question at all or no databases then we are initializing, so keep it simple
@@ -485,50 +490,71 @@ class View extends Component {
       ? SIDEBAR_SIZES.TIMELINE
       : SIDEBAR_SIZES.NORMAL;
 
+    const dragOptions = {
+      onDrop: (acceptedFiles) => {
+        console.log(acceptedFiles, question);
+        uploadFile(acceptedFiles[0], null, question._card.table_id);
+      },
+      maxFiles: 1,
+      noClick: true,
+      noDragEventsBubbling: true,
+      accept: { "text/csv": [".csv"] },
+    };
+
+
     return (
-      <div className="full-height">
-        <QueryBuilderViewRoot className="QueryBuilder">
-          {isHeaderVisible && this.renderHeader()}
-          <QueryBuilderContentContainer>
-            {isStructured && (
-              <QueryViewNotebook
-                isNotebookContainerOpen={isNotebookContainerOpen}
-                {...this.props}
+      <Dropzone {...dragOptions}>
+        {({getRootProps, getInputProps, isDragActive}) => (
+          <div className="full-height" {...getComposedDragProps(getRootProps())}>
+            <input {...getInputProps()} />
+            <UploadOverlay
+              isDragActive={isDragActive}
+              question={question}
+            />
+            <QueryBuilderViewRoot className="QueryBuilder">
+              {isHeaderVisible && this.renderHeader()}
+              <QueryBuilderContentContainer>
+                {isStructured && (
+                  <QueryViewNotebook
+                    isNotebookContainerOpen={isNotebookContainerOpen}
+                    {...this.props}
+                  />
+                )}
+                <ViewSidebar side="left" isOpen={!!leftSidebar}>
+                  {leftSidebar}
+                </ViewSidebar>
+                {this.renderMain({ leftSidebar, rightSidebar })}
+                <ViewSidebar
+                  side="right"
+                  isOpen={!!rightSidebar}
+                  width={rightSidebarWidth}
+                >
+                  {rightSidebar}
+                </ViewSidebar>
+              </QueryBuilderContentContainer>
+            </QueryBuilderViewRoot>
+
+            {isShowingNewbModal && (
+              <SavedQuestionIntroModal
+                question={question}
+                onClose={() => closeQbNewbModal()}
               />
             )}
-            <ViewSidebar side="left" isOpen={!!leftSidebar}>
-              {leftSidebar}
-            </ViewSidebar>
-            {this.renderMain({ leftSidebar, rightSidebar })}
-            <ViewSidebar
-              side="right"
-              isOpen={!!rightSidebar}
-              width={rightSidebarWidth}
-            >
-              {rightSidebar}
-            </ViewSidebar>
-          </QueryBuilderContentContainer>
-        </QueryBuilderViewRoot>
 
-        {isShowingNewbModal && (
-          <SavedQuestionIntroModal
-            question={question}
-            onClose={() => closeQbNewbModal()}
+            <QueryModals {...this.props} />
+
+          {isStructured && this.renderAggregationPopover()}
+          {isStructured && this.renderBreakoutPopover()}
+          <Toaster
+            message={t`Would you like to be notified when this question is done loading?`}
+            isShown={isShowingToaster}
+            onDismiss={onDismissToast}
+            onConfirm={onConfirmToast}
+            fixed
           />
-        )}
-
-        <QueryModals {...this.props} />
-
-        {isStructured && this.renderAggregationPopover()}
-        {isStructured && this.renderBreakoutPopover()}
-        <Toaster
-          message={t`Would you like to be notified when this question is done loading?`}
-          isShown={isShowingToaster}
-          onDismiss={onDismissToast}
-          onConfirm={onConfirmToast}
-          fixed
-        />
-      </div>
+        </div>
+      )}
+      </Dropzone>
     );
   }
 }

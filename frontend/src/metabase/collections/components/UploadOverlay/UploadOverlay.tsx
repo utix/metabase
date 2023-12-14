@@ -2,20 +2,22 @@ import { t } from "ttag";
 
 import type { Collection } from "metabase-types/api";
 import { Icon } from "metabase/core/components/Icon";
+import type Question from "metabase-lib/Question";
 import { DragOverlay } from "./UploadOverlay.styled";
 
-// eslint-disable-next-line import/no-default-export -- deprecated usage
-export default function UploadOverlay({
+export function UploadOverlay({
   isDragActive,
   collection,
+  question,
 }: {
   isDragActive: boolean;
-  collection: Collection;
+  collection?: Collection;
+  question?: Question;
 }) {
   return (
     <DragOverlay isDragActive={isDragActive}>
       <Icon name="upload" size="24" />
-      <div>{t`Drop here to upload to ${collection.name}`}</div>
+      <div>{t`Drop here to upload to ${collection?.name ?? question?.displayName()}`}</div>
     </DragOverlay>
   );
 }

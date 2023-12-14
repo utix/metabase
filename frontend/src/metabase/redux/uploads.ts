@@ -1,11 +1,11 @@
 import { assocIn, dissocIn, updateIn } from "icepick";
 import { t } from "ttag";
 
-import { CardApi } from "metabase/services";
+import { CardApi, MetabaseApi } from "metabase/services";
 import Collections from "metabase/entities/collections";
 
 import type { Dispatch, State } from "metabase-types/store";
-import type { CollectionId } from "metabase-types/api";
+import type { CardId, CollectionId } from "metabase-types/api";
 import type { FileUploadState } from "metabase-types/store/upload";
 
 import {
@@ -44,7 +44,7 @@ export const hasActiveUploads = (state: State) =>
 
 export const uploadFile = createThunkAction(
   UPLOAD_FILE_TO_COLLECTION,
-  (file: File, collectionId: CollectionId) => async (dispatch: Dispatch) => {
+  (file: File, collectionId?: CollectionId, tableId?: number) => async (dispatch: Dispatch) => {
     const id = Date.now();
 
     const clear = () =>
@@ -74,8 +74,13 @@ export const uploadFile = createThunkAction(
     try {
       const formData = new FormData();
       formData.append("file", file);
+
       formData.append("collection_id", String(collectionId));
-      const response = await CardApi.uploadCSV(formData);
+      const response = await (
+        tableId
+          ? MetabaseApi.tableAppendCSV({ tableId, formData })
+          : CardApi.uploadCSV({ formData })
+      );
 
       dispatch(
         uploadEnd({
@@ -101,7 +106,8 @@ export const uploadFile = createThunkAction(
 interface UploadStartPayload {
   id: number;
   name: string;
-  collectionId: CollectionId;
+  collectionId?: CollectionId;
+  tableId?: number;
 }
 
 interface UploadEndPayload {

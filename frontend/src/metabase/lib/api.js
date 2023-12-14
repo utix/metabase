@@ -61,6 +61,7 @@ export class Api extends EventEmitter {
         const options = { ...defaultOptions, ...invocationOptions };
         let url = urlTemplate;
         const data = { ...rawData };
+        console.log({ data })
         for (const tag of url.match(/:\w+/g) || []) {
           const paramName = tag.slice(1);
           let value = data[paramName];
@@ -100,7 +101,7 @@ export class Api extends EventEmitter {
         let body;
         if (options.hasBody) {
           body = options.formData
-            ? rawData
+            ? rawData.formData
             : JSON.stringify(
                 options.bodyParamName != null
                   ? data[options.bodyParamName]

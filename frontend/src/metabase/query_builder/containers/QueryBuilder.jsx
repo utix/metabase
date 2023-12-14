@@ -11,6 +11,7 @@ import Collections from "metabase/entities/collections";
 import Timelines from "metabase/entities/timelines";
 import { getSetting } from "metabase/selectors/settings";
 
+import { uploadFile } from "metabase/redux/uploads";
 import { closeNavbar } from "metabase/redux/app";
 import { getIsNavbarOpen } from "metabase/selectors/app";
 import { getMetadata } from "metabase/selectors/metadata";
@@ -190,6 +191,7 @@ const mapDispatchToProps = {
   onChangeLocation: push,
   createBookmark: id => Bookmark.actions.create({ id, type: "card" }),
   deleteBookmark: id => Bookmark.actions.delete({ id, type: "card" }),
+  uploadFile,
 };
 
 function QueryBuilder(props) {
@@ -218,6 +220,7 @@ function QueryBuilder(props) {
     isLoadingComplete,
     closeQB,
     route,
+    uploadFile,
   } = props;
 
   const forceUpdate = useForceUpdate();
@@ -450,6 +453,7 @@ function QueryBuilder(props) {
         onDismissToast={onDismissToast}
         onConfirmToast={onConfirmToast}
         isShowingToaster={isShowingToaster}
+        uploadFile={uploadFile}
       />
 
       <LeaveConfirmationModal

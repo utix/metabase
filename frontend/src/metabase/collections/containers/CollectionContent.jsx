@@ -32,7 +32,7 @@ import { useListSelect } from "metabase/hooks/use-list-select";
 import { isSmallScreen } from "metabase/lib/dom";
 import Databases from "metabase/entities/databases";
 
-import UploadOverlay from "../components/UploadOverlay";
+import {UploadOverlay} from "../components/UploadOverlay";
 import { getComposedDragProps } from "./utils";
 
 import {
