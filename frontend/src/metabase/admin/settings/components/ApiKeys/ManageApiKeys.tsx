@@ -102,7 +102,10 @@ export const ManageApiKeys = () => {
                   <td className="text-bold">{apiKey.name}</td>
                   <td>{apiKey.group_name}</td>
                   <td className="text-monospace">{apiKey.masked_key}</td>
+
+                  {/* TODO: replace with creator_name */}
                   <td>{apiKey.creator_id}</td>
+
                   <td>{apiKey.updated_at}</td>
                   <td>
                     <Group spacing="md">
