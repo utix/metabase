@@ -80,8 +80,6 @@ describe("scenarios > admin > settings > API keys", () => {
   beforeEach(() => {
     restore();
     mockRows = [...MOCK_ROWS];
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     cy.signInAsAdmin();
   });
 
