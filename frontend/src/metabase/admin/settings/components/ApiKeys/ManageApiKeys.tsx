@@ -16,8 +16,69 @@ import { CreateApiKeyModal } from "./CreateApiKeyModal";
 import { EditApiKeyModal } from "./EditApiKeyModal";
 import { DeleteApiKeyModal } from "./DeleteApiKeyModal";
 
+type Modal = null | "create" | "edit" | "delete";
+
+function ApiKeysTable({
+  apiKeys,
+  setActiveApiKey,
+  setModal,
+}: {
+  apiKeys?: ApiKey[];
+  setActiveApiKey: (apiKey: ApiKey) => void;
+  setModal: (modal: Modal) => void;
+}) {
+  return (
+    <table className="ContentTable border-bottom" data-testid="api-keys-table">
+      <thead>
+        <tr>
+          <th>{t`Key name`}</th>
+          <th>{t`Group`}</th>
+          <th>{t`Key`}</th>
+          <th>{t`Last Modified By`}</th>
+          <th>{t`Last Modified On`}</th>
+          <th />
+        </tr>
+      </thead>
+      <tbody>
+        {apiKeys?.map(apiKey => (
+          <tr key={apiKey.id} className="border-bottom">
+            <td className="text-bold">{apiKey.name}</td>
+            <td>{apiKey.group_name}</td>
+            <td className="text-monospace">{apiKey.masked_key}</td>
+
+            {/* TODO: replace with creator_name */}
+            <td>{apiKey.creator_id}</td>
+
+            <td>{apiKey.updated_at}</td>
+            <td>
+              <Group spacing="md">
+                <Icon
+                  name="pencil"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setActiveApiKey(apiKey);
+                    setModal("edit");
+                  }}
+                />
+                <Icon
+                  name="trash"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setActiveApiKey(apiKey);
+                    setModal("delete");
+                  }}
+                />
+              </Group>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 export const ManageApiKeys = () => {
-  const [modal, setModal] = useState<null | "create" | "edit" | "delete">(null);
+  const [modal, setModal] = useState<Modal>(null);
   const [activeApiKey, setActiveApiKey] = useState<null | ApiKey>(null);
 
   const [{ value: apiKeys, loading, error }, refreshList] = useAsyncFn(
@@ -75,55 +136,11 @@ export const ManageApiKeys = () => {
           >{t`Create API Key`}</Button>
         </Group>
         <LoadingAndErrorWrapper loading={loading} error={error}>
-          <table
-            className="ContentTable border-bottom"
-            data-testid="api-keys-table"
-          >
-            <thead>
-              <tr>
-                <th>{t`Key name`}</th>
-                <th>{t`Group`}</th>
-                <th>{t`Key`}</th>
-                <th>{t`Last Modified By`}</th>
-                <th>{t`Last Modified On`}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {apiKeys?.map(apiKey => (
-                <tr key={apiKey.id} className="border-bottom">
-                  <td className="text-bold">{apiKey.name}</td>
-                  <td>{apiKey.group_name}</td>
-                  <td className="text-monospace">{apiKey.masked_key}</td>
-
-                  {/* TODO: replace with creator_name */}
-                  <td>{apiKey.creator_id}</td>
-
-                  <td>{apiKey.updated_at}</td>
-                  <td>
-                    <Group spacing="md">
-                      <Icon
-                        name="pencil"
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setActiveApiKey(apiKey);
-                          setModal("edit");
-                        }}
-                      />
-                      <Icon
-                        name="trash"
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setActiveApiKey(apiKey);
-                          setModal("delete");
-                        }}
-                      />
-                    </Group>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ApiKeysTable
+            apiKeys={apiKeys}
+            setActiveApiKey={setActiveApiKey}
+            setModal={setModal}
+          />
           {isShowingEmptyTable && (
             <Stack
               h="40rem" // TODO: how to make this fill only available window height?
