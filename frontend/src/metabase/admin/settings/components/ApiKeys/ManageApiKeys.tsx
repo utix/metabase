@@ -1,5 +1,6 @@
 import { t } from "ttag";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useAsyncFn } from "react-use";
 
 import { Stack, Title, Text, Button, Group } from "metabase/ui";
 
@@ -16,25 +17,13 @@ import { EditApiKeyModal } from "./EditApiKeyModal";
 import { DeleteApiKeyModal } from "./DeleteApiKeyModal";
 
 export const ManageApiKeys = () => {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [modal, setModal] = useState<null | "create" | "edit" | "delete">(null);
   const [activeApiKey, setActiveApiKey] = useState<null | ApiKey>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<null | string>(null);
 
-  const refreshList = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const apiKeys = await ApiKeysApi.list();
-      setApiKeys(apiKeys);
-    } catch (e: any) {
-      if (e && Object.hasOwn(e, "data")) {
-        setError((e as { data: string }).data);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [{ value: apiKeys, loading, error }, refreshList] = useAsyncFn(
+    (): Promise<ApiKey[]> => ApiKeysApi.list(),
+    [],
+  );
 
   const handleClose = () => setModal(null);
 
@@ -42,8 +31,8 @@ export const ManageApiKeys = () => {
     refreshList();
   }, [refreshList]);
 
-  const isTableVisible = !isLoading && !error;
-  const isShowingEmptyTable = isTableVisible && apiKeys.length === 0;
+  const isTableVisible = loading && !error;
+  const isShowingEmptyTable = isTableVisible && apiKeys?.length === 0;
 
   return (
     <>
@@ -81,7 +70,7 @@ export const ManageApiKeys = () => {
             onClick={() => setModal("create")}
           >{t`Create API Key`}</Button>
         </Group>
-        <LoadingAndErrorWrapper loading={isLoading} error={error}>
+        <LoadingAndErrorWrapper loading={loading} error={error}>
           <table
             className="ContentTable border-bottom"
             data-testid="api-keys-table"
@@ -97,7 +86,7 @@ export const ManageApiKeys = () => {
               </tr>
             </thead>
             <tbody>
-              {apiKeys.map(apiKey => (
+              {apiKeys?.map(apiKey => (
                 <tr key={apiKey.id} className="border-bottom">
                   <td className="text-bold">{apiKey.name}</td>
                   <td>{apiKey.group_name}</td>
