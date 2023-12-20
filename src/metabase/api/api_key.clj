@@ -12,6 +12,21 @@
    [metabase.util.malli.schema :as ms]
    [toucan2.core :as t2]))
 
+(defn- present-api-key
+  "Takes an ApiKey and hydrates/selects keys as necessary to put it into a standard form for responses"
+  [api-key]
+  (-> api-key
+      (t2/hydrate :group_name :updated_by)
+      (select-keys [:created_at
+                    :updated_at
+                    :updated_by
+                    :id
+                    :group_name
+                    :unmasked_key
+                    :name
+                    :masked_key])
+      (update :updated_by #(select-keys % [:common_name :id]))))
+
 (defn- key-with-unique-prefix []
   (u/auto-retry 5
    (let [api-key (api-key/generate-key)
@@ -38,18 +53,14 @@
                                          :type       :api-key})]
         (user/set-permissions-groups! user [(perms-group/all-users) group_id])
         (let [api-key (-> (t2/insert-returning-instance! :model/ApiKey
-                                                         {:user_id      (u/the-id user)
-                                                          :name         name
-                                                          :unhashed_key unhashed-key
-                                                          :created_by   api/*current-user-id*})
-                          (t2/hydrate :group_name))]
+                                                         {:user_id       (u/the-id user)
+                                                          :name          name
+                                                          :unhashed_key  unhashed-key})
+                          (t2/hydrate :group_name :updated_by))]
           (events/publish-event! :event/api-key-create
                                  {:object  api-key
                                   :user-id api/*current-user-id*})
-          (-> api-key
-              (select-keys [:created_at :updated_at :id :group_name :name])
-              (assoc :unmasked_key unhashed-key
-                     :masked_key (api-key/mask unhashed-key))))))))
+          (present-api-key (assoc api-key :unmasked_key unhashed-key)))))))
 
 (api/defendpoint GET "/count"
   "Get the count of API keys in the DB"
@@ -68,19 +79,19 @@
     (let [api-key-before (-> (t2/select-one :model/ApiKey :id id)
                              ;; hydrate the group_name for audit logging
                              (t2/hydrate :group_name))]
+      (when group_id
+        (let [user (-> api-key-before (t2/hydrate :user) :user)]
+          (user/set-permissions-groups! user [(perms-group/all-users) {:id group_id}])))
       (when name
         ;; A bit of a pain to keep these in sync, but oh well.
         (t2/update! :model/User (:user_id api-key-before) {:first_name name})
         (t2/update! :model/ApiKey id {:name name}))
-      (when group_id
-        (let [user (-> api-key-before (t2/hydrate :user) :user)]
-          (user/set-permissions-groups! user [(perms-group/all-users) {:id group_id}])))
       (let [updated-api-key (-> (t2/select-one :model/ApiKey :id id)
-                                (t2/hydrate :group_name))]
+                                (t2/hydrate :group_name :updated_by))]
         (events/publish-event! :event/api-key-update {:object updated-api-key
                                                       :previous-object api-key-before
                                                       :user-id api/*current-user-id*})
-        (select-keys updated-api-key [:created_at :updated_at :id :name :masked_key :group_name])))))
+        (present-api-key updated-api-key)))))
 
 (api/defendpoint PUT "/:id/regenerate"
   "Regenerate an API Key"
@@ -98,16 +109,15 @@
                            {:object api-key-after
                             :previous-object api-key-before
                             :user-id api/*current-user-id*})
-    (-> api-key-after
-        (select-keys [:created_at :updated_at :id :name :group_name])
-        (assoc :unmasked_key unhashed-key
-               :masked_key (api-key/mask unhashed-key)))))
+    (present-api-key (assoc api-key-after
+                            :unmasked_key unhashed-key
+                            :masked_key (api-key/mask unhashed-key)))))
 
 (api/defendpoint GET "/"
   "Get a list of API keys. Non-paginated."
   []
   (api/check-superuser)
-  (let [api-keys (t2/hydrate (t2/select :model/ApiKey) :group_name)]
-    (map #(select-keys % [:created_at :updated_at :id :name :group_name]) api-keys)))
+  (let [api-keys (t2/hydrate (t2/select :model/ApiKey) :group_name :updated_by)]
+    (map present-api-key api-keys)))
 
 (api/define-routes)

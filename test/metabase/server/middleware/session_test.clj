@@ -247,10 +247,11 @@
              (select-keys (wrapped-handler request) [:anti-csrf-token :cookies :metabase-session-id :uri]))))))
 
 (deftest current-user-info-for-api-key-test
-  (t2.with-temp/with-temp [:model/ApiKey _ {:name         "An API Key"
-                                            :user_id      (mt/user->id :lucky)
-                                            :created_by   (mt/user->id :lucky)
-                                            :unhashed_key "mb_foobar"}]
+  (t2.with-temp/with-temp [:model/ApiKey _ {:name          "An API Key"
+                                            :user_id       (mt/user->id :lucky)
+                                            :created_by_id (mt/user->id :lucky)
+                                            :updated_by_id (mt/user->id :lucky)
+                                            :unhashed_key  "mb_foobar"}]
     (testing "A valid API key works, and user info is added to the request"
       (let [req {:headers {"x-api-key" "mb_foobar"}}]
         (is (= (merge req {:metabase-user-id  (mt/user->id :lucky)
@@ -288,11 +289,13 @@
 (deftest user-data-is-correctly-bound-for-api-keys
   (t2.with-temp/with-temp [:model/ApiKey _ {:name         "An API Key"
                                             :user_id      (mt/user->id :lucky)
-                                            :created_by   (mt/user->id :lucky)
+                                            :created_by_id (mt/user->id :lucky)
+                                            :updated_by_id (mt/user->id :lucky)
                                             :unhashed_key "mb_foobar"}
                            :model/ApiKey _ {:name "A superuser API Key"
                                             :user_id (mt/user->id :crowberto)
-                                            :created_by (mt/user->id :crowberto)
+                                            :created_by_id (mt/user->id :lucky)
+                                            :updated_by_id (mt/user->id :lucky)
                                             :unhashed_key "mb_superuser"}]
     (testing "A valid API key works, and user info is added to the request"
       (is (= {:is-superuser? false
