@@ -77,6 +77,20 @@ function ApiKeysTable({
   );
 }
 
+function EmptyTableWarning() {
+  return (
+    <Stack
+      h="40rem" // TODO: how to make this fill only available window height?
+      align="center"
+      justify="center"
+      spacing="sm"
+    >
+      <Title>{t`No API keys here yet`}</Title>
+      <Text color="text.1">{t`Create API keys to programmatically authenticate their API calls.`}</Text>
+    </Stack>
+  );
+}
+
 export const ManageApiKeys = () => {
   const [modal, setModal] = useState<Modal>(null);
   const [activeApiKey, setActiveApiKey] = useState<null | ApiKey>(null);
@@ -141,17 +155,7 @@ export const ManageApiKeys = () => {
             setActiveApiKey={setActiveApiKey}
             setModal={setModal}
           />
-          {isShowingEmptyTable && (
-            <Stack
-              h="40rem" // TODO: how to make this fill only available window height?
-              align="center"
-              justify="center"
-              spacing="sm"
-            >
-              <Title>{t`No API keys here yet`}</Title>
-              <Text color="text.1">{t`Create API keys to programmatically authenticate their API calls.`}</Text>
-            </Stack>
-          )}
+          {isShowingEmptyTable && <EmptyTableWarning />}
         </LoadingAndErrorWrapper>
       </Stack>
     </>
