@@ -58,7 +58,11 @@ export const ManageApiKeys = () => {
             [t`API Keys`],
           ]}
         />
-        <Group align="end" position="apart">
+        <Group
+          align="end"
+          position="apart"
+          data-testid="api-keys-settings-header"
+        >
           <Stack>
             <Title>{t`Manage API Keys`}</Title>
             {!isShowingEmptyTable && (

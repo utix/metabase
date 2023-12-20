@@ -121,7 +121,9 @@ describe("scenarios > admin > settings > API keys", () => {
 
     cy.visit("/admin/settings/authentication/api-keys");
     cy.wait("@fetchKeys");
-    cy.button("Create API Key").click();
+    cy.findByTestId("api-keys-settings-header")
+      .button("Create API Key")
+      .click();
     cy.findByLabelText(/Key name/).type("New key");
     cy.findByLabelText(/Select a group/).click();
     cy.findByRole("listbox").findByText("Administrators").click();
