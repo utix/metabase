@@ -69,7 +69,7 @@ const RegenerateKeyModal = ({
                 size="sm"
               >{t`Group`}</Text>
               <Text weight="bold" size="sm">
-                {apiKey.group_name}
+                {apiKey.group.name}
               </Text>
             </Stack>
             <Text>{t`The existing API key will be deleted and cannot be recovered. It will be replaced with a new key.`}</Text>
@@ -139,7 +139,11 @@ export const EditApiKeyModal = ({
         title={t`Edit API Key`}
       >
         <FormProvider
-          initialValues={{ ...apiKey, masked_key: maskedKey }}
+          initialValues={{
+            ...apiKey,
+            group_id: apiKey.group.id,
+            masked_key: maskedKey,
+          }}
           onSubmit={handleSubmit}
         >
           {({ dirty }) => (

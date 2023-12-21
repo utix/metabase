@@ -43,7 +43,7 @@ function ApiKeysTable({
         {apiKeys?.map(apiKey => (
           <tr key={apiKey.id} className="border-bottom">
             <td className="text-bold">{apiKey.name}</td>
-            <td>{apiKey.group_name}</td>
+            <td>{apiKey.group.name}</td>
             <td className="text-monospace">{apiKey.masked_key}</td>
             <td>{apiKey.updated_by.common_name}</td>
             <td>{apiKey.updated_at}</td>
