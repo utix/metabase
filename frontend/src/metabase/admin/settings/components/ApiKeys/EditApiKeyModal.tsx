@@ -21,23 +21,20 @@ type EditModalName = "edit" | "regenerate" | "secretKey";
 const RegenerateKeyModal = ({
   apiKey,
   setModal,
-  setMaskedKey,
   setSecretKey,
   refreshList,
 }: {
   apiKey: ApiKey;
   setModal: (name: EditModalName) => void;
-  setMaskedKey: (key: string) => void;
   setSecretKey: (key: string) => void;
   refreshList: () => void;
 }) => {
   const handleRegenerate = useCallback(async () => {
     const result = await ApiKeysApi.regenerate({ id: apiKey.id });
-    setMaskedKey(result.masked_key);
     setSecretKey(result.unmasked_key);
     setModal("secretKey");
     refreshList();
-  }, [apiKey.id, refreshList, setMaskedKey, setModal, setSecretKey]);
+  }, [apiKey.id, refreshList, setModal, setSecretKey]);
 
   return (
     <Modal
@@ -98,7 +95,6 @@ export const EditApiKeyModal = ({
 }) => {
   const [modal, setModal] = useState<EditModalName>("edit");
   const [secretKey, setSecretKey] = useState<string>("");
-  const [maskedKey, setMaskedKey] = useState<string>(apiKey.masked_key);
 
   const handleSubmit = useCallback(
     async vals => {
@@ -122,7 +118,6 @@ export const EditApiKeyModal = ({
       <RegenerateKeyModal
         apiKey={apiKey}
         setModal={setModal}
-        setMaskedKey={setMaskedKey}
         setSecretKey={setSecretKey}
         refreshList={refreshList}
       />
@@ -139,11 +134,7 @@ export const EditApiKeyModal = ({
         title={t`Edit API Key`}
       >
         <FormProvider
-          initialValues={{
-            ...apiKey,
-            group_id: apiKey.group.id,
-            masked_key: maskedKey,
-          }}
+          initialValues={{ ...apiKey, group_id: apiKey.group.id }}
           onSubmit={handleSubmit}
         >
           {({ dirty }) => (
