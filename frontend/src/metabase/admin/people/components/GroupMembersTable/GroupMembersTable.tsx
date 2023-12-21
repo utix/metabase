@@ -63,7 +63,7 @@ function GroupMembersTable({
 
   useEffect(() => {
     ApiKeysApi.list().then((apiKeys: ApiKey[]) =>
-      setApiKeys(apiKeys.filter(apiKey => apiKey.group_id === group.id)),
+      setApiKeys(apiKeys.filter(apiKey => apiKey.group.id === group.id)),
     );
   }, [group.id]);
 

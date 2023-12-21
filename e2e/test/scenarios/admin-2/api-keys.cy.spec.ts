@@ -7,7 +7,6 @@ const MOCK_ROWS: ApiKey[] = [
   {
     name: "Development API Key",
     id: 1,
-    group_id: 1,
     group: {
       id: 1,
       name: "All Users",
@@ -17,6 +16,7 @@ const MOCK_ROWS: ApiKey[] = [
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
     updated_by: {
+      id: 10,
       common_name: "John Doe",
     },
   },
@@ -32,6 +32,7 @@ const MOCK_ROWS: ApiKey[] = [
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
     updated_by: {
+      id: 11,
       common_name: "Jane Doe",
     },
   },
@@ -47,7 +48,8 @@ const MOCK_ROWS: ApiKey[] = [
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
     updated_by: {
-      common_name: "Joan Doe",
+      id: 12,
+      common_name: "Jane Doe",
     },
   },
 ];
