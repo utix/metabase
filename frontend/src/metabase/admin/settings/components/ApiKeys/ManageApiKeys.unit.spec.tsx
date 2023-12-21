@@ -23,22 +23,34 @@ async function setup() {
     {
       name: "Development API Key",
       id: 1,
-      group_id: 1,
-      group_name: "All Users",
+      group: {
+        id: 1,
+        name: "All Users",
+      },
       creator_id: 1,
       masked_key: "asdfasdfa",
       created_at: "2010 Aug 10",
       updated_at: "2010 Aug 10",
+      updated_by: {
+        common_name: "John Doe",
+        id: 10,
+      },
     },
     {
       name: "Production API Key",
       id: 2,
-      group_id: 2,
-      group_name: "All Users",
+      group: {
+        id: 2,
+        name: "Administrators",
+      },
       creator_id: 1,
       masked_key: "asdfasdfa",
       created_at: "2010 Aug 10",
       updated_at: "2010 Aug 10",
+      updated_by: {
+        common_name: "Jane Doe",
+        id: 10,
+      },
     },
   ]);
   renderWithProviders(<ManageApiKeys />);

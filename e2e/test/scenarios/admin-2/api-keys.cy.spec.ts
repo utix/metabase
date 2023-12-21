@@ -8,31 +8,47 @@ const MOCK_ROWS: ApiKey[] = [
     name: "Development API Key",
     id: 1,
     group_id: 1,
-    group_name: "All Users",
+    group: {
+      id: 1,
+      name: "All Users",
+    },
     creator_id: 1,
     masked_key: "asdfasdfa",
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
+    updated_by: {
+      common_name: "John Doe",
+    },
   },
   {
     name: "Production API Key",
     id: 2,
-    group_id: 2,
-    group_name: "Administrators",
+    group: {
+      id: 2,
+      name: "Administrators",
+    },
     creator_id: 1,
     masked_key: "asdfasdfa",
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
+    updated_by: {
+      common_name: "Jane Doe",
+    },
   },
   {
     name: "Personal API Key",
     id: 3,
-    group_id: 3,
-    group_name: "collection",
+    group: {
+      id: 3,
+      name: "collection",
+    },
     creator_id: 1,
     masked_key: "asdfasdfa",
     created_at: "2010 Aug 10",
     updated_at: "2010 Aug 10",
+    updated_by: {
+      common_name: "Joan Doe",
+    },
   },
 ];
 
