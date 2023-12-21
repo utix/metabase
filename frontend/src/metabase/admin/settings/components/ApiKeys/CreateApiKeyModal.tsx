@@ -27,7 +27,7 @@ export const CreateApiKeyModal = ({
   const handleSubmit = useCallback(
     async vals => {
       const response = await ApiKeysApi.create(vals);
-      setSecretKey(response.masked_key);
+      setSecretKey(response.unmasked_key);
       setModal("secretKey");
       refreshList();
     },
