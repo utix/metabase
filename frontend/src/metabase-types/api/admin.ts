@@ -7,4 +7,8 @@ export type ApiKey = {
   masked_key: string;
   created_at: string;
   updated_at: string;
+  updated_by: {
+    common_name: string;
+    id: number;
+  };
 };
