@@ -16,13 +16,13 @@
   "Takes an ApiKey and hydrates/selects keys as necessary to put it into a standard form for responses"
   [api-key]
   (-> api-key
-      (t2/hydrate :group_name :updated_by)
+      (t2/hydrate :group :updated_by)
       (select-keys [:created_at
                     :updated_at
                     :updated_by
                     :archived
                     :id
-                    :group_name
+                    :group
                     :unmasked_key
                     :name
                     :masked_key])
@@ -57,7 +57,7 @@
                                                          {:user_id       (u/the-id user)
                                                           :name          name
                                                           :unhashed_key  unhashed-key})
-                          (t2/hydrate :group_name :updated_by))]
+                          (t2/hydrate :group :updated_by))]
           (events/publish-event! :event/api-key-create
                                  {:object  api-key
                                   :user-id api/*current-user-id*})
@@ -78,8 +78,8 @@
   (api/check-superuser)
   (t2/with-transaction [_conn]
     (let [api-key-before (-> (t2/select-one :model/ApiKey :id id)
-                             ;; hydrate the group_name for audit logging
-                             (t2/hydrate :group_name))]
+                             ;; hydrate the group for audit logging
+                             (t2/hydrate :group))]
       (when group_id
         (let [user (-> api-key-before (t2/hydrate :user) :user)]
           (user/set-permissions-groups! user [(perms-group/all-users) {:id group_id}])))
@@ -88,7 +88,7 @@
         (t2/update! :model/User (:user_id api-key-before) {:first_name name})
         (t2/update! :model/ApiKey id {:name name}))
       (let [updated-api-key (-> (t2/select-one :model/ApiKey :id id)
-                                (t2/hydrate :group_name :updated_by))]
+                                (t2/hydrate :group :updated_by))]
         (events/publish-event! :event/api-key-update {:object updated-api-key
                                                       :previous-object api-key-before
                                                       :user-id api/*current-user-id*})
@@ -100,7 +100,7 @@
   {id ms/PositiveInt}
   (api/check-superuser)
   (let [api-key-before (-> (t2/select-one :model/ApiKey id)
-                           (t2/hydrate :group_name))
+                           (t2/hydrate :group))
         unhashed-key (key-with-unique-prefix)
         api-key-after (assoc api-key-before
                              :unhashed_key unhashed-key
@@ -118,7 +118,7 @@
   "Get a list of API keys. Non-paginated."
   []
   (api/check-superuser)
-  (let [api-keys (t2/hydrate (t2/select :model/ApiKey :archived false) :group_name :updated_by)]
+  (let [api-keys (t2/hydrate (t2/select :model/ApiKey :archived false) :group :updated_by)]
     (map present-api-key api-keys)))
 
 (api/defendpoint DELETE "/:id"
@@ -128,7 +128,7 @@
   (api/check-superuser)
   (t2/with-transaction [_tx]
     (let [api-key (-> (t2/select-one :model/ApiKey id)
-                      (t2/hydrate :group_name))]
+                      (t2/hydrate :group))]
       (t2/update! :model/ApiKey id {:archived true})
       (t2/update! :model/User (:user_id api-key) {:is_active false})
       (events/publish-event! :event/api-key-archive
