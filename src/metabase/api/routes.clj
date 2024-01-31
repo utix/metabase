@@ -31,6 +31,7 @@
    [metabase.api.preview-embed :as api.preview-embed]
    [metabase.api.public :as api.public]
    [metabase.api.pulse :as api.pulse]
+   [metabase.api.recent-errors :as api.recent-errors]
    [metabase.api.revision :as api.revision]
    [metabase.api.routes.common
     :refer [+auth +message-only-exceptions +public-exceptions +static-apikey]]
@@ -116,4 +117,5 @@
   (context "/user"                 [] (+auth api.user/routes))
   (context "/api-key"              [] (+auth api.api-key/routes))
   (context "/util"                 [] api.util/routes)
+  (context "/errors"               [] (+auth api.recent-errors/routes))
   (route/not-found (constantly {:status 404, :body (deferred-tru "API endpoint does not exist.")})))
