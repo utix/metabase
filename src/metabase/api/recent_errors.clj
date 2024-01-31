@@ -18,6 +18,8 @@
 
 (api/defendpoint GET "/recent"
   []
-  (map (fn [m] (update m :error #(.getMessage ^Throwable %))) @recent-errors))
+  (map (fn [m] {:message (.getMessage ^Throwable (:error m))
+                :occurred-at (:occurred-at m)})
+       @recent-errors))
 
 (api/define-routes)
