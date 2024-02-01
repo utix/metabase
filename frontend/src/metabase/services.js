@@ -227,6 +227,7 @@ export const CollectionsApi = {
   update: PUT("/api/collection/:id"),
   graph: GET("/api/collection/graph"),
   updateGraph: PUT("/api/collection/graph"),
+  getAutoArchive: GET("/api/autoarchive"),
 };
 
 const PIVOT_PUBLIC_PREFIX = "/api/public/pivot/";

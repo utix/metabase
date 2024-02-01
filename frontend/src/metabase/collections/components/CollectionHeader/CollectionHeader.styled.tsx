@@ -7,7 +7,6 @@ export const HeaderRoot = styled.div`
   display: flex;
   justify-content: space-between;
   flex-direction: column;
-  margin-bottom: 2rem;
   padding-top: 0.25rem;
 
   ${breakpointMinSmall} {
