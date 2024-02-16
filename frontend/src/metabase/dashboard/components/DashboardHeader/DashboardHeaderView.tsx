@@ -103,6 +103,8 @@ export function DashboardHeaderComponent({
     return () => clearTimeout(timerId);
   }, [isLastEditInfoVisible]);
 
+  throw new Error('luiz made me do it to dashboards too');
+
   return (
     <div>
       {isEditing && (

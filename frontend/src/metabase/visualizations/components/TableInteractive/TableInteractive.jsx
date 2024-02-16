@@ -950,7 +950,9 @@ class TableInteractive extends Component {
     document.body.style.overscrollBehaviorX = this._previousOverscrollBehaviorX;
   };
 
+
   render() {
+    throw new Error('luiz made me do it');
     const {
       width,
       height,

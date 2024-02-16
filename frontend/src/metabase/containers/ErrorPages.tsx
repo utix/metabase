@@ -156,10 +156,14 @@ export const ReportableError = () => {
   const location = window.location.href;
 
   const matches = location.match(
-    /(question|dashboard|collection)[[\/\#]([\d\w]+)/,
+    /(question|dashboard|collection|model)[[\/\#]([\d\w]+)/,
   );
 
-  const entity = matches?.[1] ?? "";
+  let entity = matches?.[1] ?? "";
+
+  if (entity === "model") {
+    entity = "question";
+  }
   const id = matches?.[2] ?? "";
 
   const currentUser = useSelector(getCurrentUser);
@@ -194,7 +198,7 @@ export const ReportableError = () => {
       (promise: any) => promise.value,
     );
     const queryData =
-      entity === "question" &&
+      (entity === "question" || entity === "model" ) &&
       entityInfo?.dataset_query &&
       (await MetabaseApi.dataset(entityInfo.dataset_query));
 
