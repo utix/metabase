@@ -7,13 +7,11 @@ import ReactDOM from "react-dom";
 import { t } from "ttag";
 
 import IconBorder from "metabase/components/IconBorder";
-import PopoverWithTrigger from "metabase/components/PopoverWithTrigger";
 import { DatabaseSchemaAndTableDataSelector } from "metabase/query_builder/components/DataSelector";
-import { Icon } from "metabase/ui";
+import { Icon, Popover } from "metabase/ui";
 import * as Lib from "metabase-lib";
 
 import { AggregationWidget } from "../AggregationWidget";
-import { FilterPopover } from "../FilterPopover";
 import { FilterWidgetList } from "../FilterWidgetList";
 
 /**
@@ -29,6 +27,7 @@ export class GuiQueryEditor extends Component {
 
   state = {
     expanded: true,
+    isFilterPopoverOpened: false,
   };
 
   static propTypes = {
@@ -81,7 +80,7 @@ export class GuiQueryEditor extends Component {
   }
 
   renderFilters() {
-    const { legacyQuery, query, features } = this.props;
+    const { query, stageIndex, features } = this.props;
 
     if (!features.filter) {
       return;
@@ -96,29 +95,24 @@ export class GuiQueryEditor extends Component {
     if (isEditable) {
       enabled = true;
 
-      const filters = legacyQuery.filters();
+      const filters = Lib.filters(query, stageIndex);
       if (filters && filters.length > 0) {
         filterList = (
           <FilterWidgetList
-            query={legacyQuery}
+            query={query}
+            stageIndex={stageIndex}
             filters={filters}
-            removeFilter={index =>
-              console.error(legacyQuery.removeFilter(index))
-            }
-            updateFilter={(index, filter) =>
-              console.error(legacyQuery.updateFilter(index, filter))
-            }
+            removeFilter={index => console.error(index)}
+            updateFilter={(index, filter) => console.error(index)}
           />
         );
       }
 
-      if (legacyQuery.canAddFilter()) {
-        addFilterButton = this.renderAdd(
-          filterList ? null : t`Add filters to narrow your answer`,
-          null,
-          "addFilterTarget",
-        );
-      }
+      addFilterButton = this.renderAdd(
+        filterList ? null : t`Add filters to narrow your answer`,
+        null,
+        "addFilterTarget",
+      );
     } else {
       enabled = false;
       addFilterButton = this.renderAdd(
@@ -132,23 +126,20 @@ export class GuiQueryEditor extends Component {
       <div className={cx("Query-section", { disabled: !enabled })}>
         <div className="Query-filters">{filterList}</div>
         <div className="mx2">
-          <PopoverWithTrigger
-            id="FilterPopover"
-            ref={this.filterPopover}
-            triggerElement={addFilterButton}
-            triggerClasses="flex align-center"
-            horizontalAttachments={["left", "center"]}
-            autoWidth
+          <Popover
+            opened={this.state.isFilterPopoverOpened}
+            trapFocus
+            transitionProps={{ duration: 0 }}
+            onChange={isFilterPopoverOpened =>
+              this.setState({ isFilterPopoverOpened })
+            }
+            onClose={this.close}
           >
-            <FilterPopover
-              isNew
-              query={legacyQuery}
-              onChangeFilter={filter =>
-                console.error(legacyQuery.filter(filter))
-              }
-              onClose={() => this.filterPopover.current.close()}
-            />
-          </PopoverWithTrigger>
+            <Popover.Target>{addFilterButton}</Popover.Target>
+            <Popover.Dropdown>
+              <div />
+            </Popover.Dropdown>
+          </Popover>
         </div>
       </div>
     );

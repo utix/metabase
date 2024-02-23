@@ -1,31 +1,17 @@
+import type { ReactNode } from "react";
 import { Component } from "react";
 import * as React from "react";
 
-import { Filter as FilterComponent } from "metabase/admin/datamodel/components/Filter";
-import Popover from "metabase/components/Popover";
-import type StructuredQuery from "metabase-lib/queries/StructuredQuery";
-import type Filter from "metabase-lib/queries/structured/Filter";
+import { Popover } from "metabase/ui";
+import * as Lib from "metabase-lib";
 
-import { FilterPopover } from "../FilterPopover";
+import { FilterWidgetRoot } from "./FilterWidget.styled";
 
-import {
-  FilterField,
-  FilterOperator,
-  FilterWidgetRoot,
-  QueryOption,
-} from "./FilterWidget.styled";
-
-type PillProps = {
-  field: string;
-  operator: string;
-  values: string[];
+type FilterWidgetPillProps = {
+  children?: ReactNode;
 };
 
-export const filterWidgetFilterRenderer = ({
-  field,
-  operator,
-  values,
-}: PillProps) => (
+export const FilterWidgetPill = ({ children }: FilterWidgetPillProps) => (
   <div className="flex flex-column justify-center">
     <div
       className="flex align-center"
@@ -36,34 +22,15 @@ export const filterWidgetFilterRenderer = ({
         paddingLeft: 0,
       }}
     >
-      {field && <FilterField>{field}</FilterField>}
-      {field && operator ? <span>&nbsp;</span> : null}
-      {operator && (
-        <FilterOperator>
-          <QueryOption as="a" className="QueryOption flex align-center">
-            {operator}
-          </QueryOption>
-        </FilterOperator>
-      )}
+      {children}
     </div>
-    {values.length > 0 && (
-      <div className="flex align-center flex-wrap">
-        {values.map((value, valueIndex) => (
-          <div key={valueIndex} className="Filter-section Filter-section-value">
-            <QueryOption className="QueryOption">{value}</QueryOption>
-          </div>
-        ))}
-      </div>
-    )}
   </div>
 );
 
 type Props = {
-  filter: Filter;
-  query: StructuredQuery;
-  updateFilter: (index: number, filter: any[]) => void;
-  index: number;
-  removeFilter: (index: number) => void;
+  query: Lib.Query;
+  stageIndex: number;
+  filter: Lib.FilterClause;
 };
 
 type State = {
@@ -80,7 +47,7 @@ export class FilterWidget extends Component<Props, State> {
     super(props);
 
     this.state = {
-      isOpen: this.props.filter[0] == null,
+      isOpen: false,
     };
 
     this.rootRef = React.createRef();
@@ -99,52 +66,31 @@ export class FilterWidget extends Component<Props, State> {
   };
 
   renderFilter() {
-    const { query } = this.props;
-    return (
-      <FilterComponent
-        metadata={query && query.metadata && query.metadata()}
-        {...this.props}
-      >
-        {filterWidgetFilterRenderer}
-      </FilterComponent>
-    );
+    const { query, stageIndex, filter } = this.props;
+    const filterInfo = Lib.displayInfo(query, stageIndex, filter);
+    return <FilterWidgetPill>{filterInfo.displayName}</FilterWidgetPill>;
   }
 
   renderPopover() {
-    if (this.state.isOpen) {
-      const { query, filter } = this.props;
-      return (
-        <Popover
-          id="FilterPopover"
-          className="FilterPopover"
-          target={this.rootRef.current}
-          isInitiallyOpen={this.props.filter[1] === null}
-          onClose={this.close}
-          horizontalAttachments={["left", "center"]}
-          autoWidth
-        >
-          <FilterPopover
-            query={query}
-            filter={filter}
-            onChangeFilter={filter => {
-              this.props.updateFilter?.(this.props.index, filter);
-              this.close();
-            }}
-            onClose={this.close}
-            isNew={false}
-          />
-        </Popover>
-      );
-    }
+    return <div />;
   }
 
   render() {
     return (
       <FilterWidgetRoot isSelected={this.state.isOpen} ref={this.rootRef}>
-        <div className="flex justify-center" onClick={this.open}>
-          {this.renderFilter()}
-        </div>
-        {this.renderPopover()}
+        <Popover
+          opened={this.state.isOpen}
+          trapFocus
+          transitionProps={{ duration: 0 }}
+          onClose={this.close}
+        >
+          <Popover.Target>
+            <div className="flex justify-center" onClick={this.open}>
+              {this.renderFilter()}
+            </div>
+          </Popover.Target>
+          <Popover.Dropdown>{this.renderPopover()}</Popover.Dropdown>
+        </Popover>
       </FilterWidgetRoot>
     );
   }

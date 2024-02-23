@@ -36,7 +36,7 @@ export class FilterWidgetList extends Component {
   }
 
   render() {
-    const { query, filters } = this.props;
+    const { query, stageIndex, filters } = this.props;
     return (
       <div className="Query-filterList ml2 scroll-x scroll-show">
         {filters.map((filter, index) => (
@@ -44,6 +44,7 @@ export class FilterWidgetList extends Component {
             key={index}
             placeholder={t`Item`}
             query={query}
+            stageIndex={stageIndex}
             filter={filter}
             index={index}
             removeFilter={this.props.removeFilter}
