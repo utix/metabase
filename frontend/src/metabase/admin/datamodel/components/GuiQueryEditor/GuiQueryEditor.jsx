@@ -8,12 +8,11 @@ import { t } from "ttag";
 
 import IconBorder from "metabase/components/IconBorder";
 import { DatabaseSchemaAndTableDataSelector } from "metabase/query_builder/components/DataSelector";
-import { FilterPicker } from "metabase/querying";
-import { Icon, Popover } from "metabase/ui";
+import { Icon } from "metabase/ui";
 import * as Lib from "metabase-lib";
 
 import { AggregationWidget } from "../AggregationWidget";
-import { FilterWidgetList } from "../FilterWidgetList";
+import { FilterWidget } from "../FilterWidget";
 
 /**
  * @deprecated use MLv2
@@ -82,140 +81,75 @@ export class GuiQueryEditor extends Component {
 
   renderFilters() {
     const { query, stageIndex, features, setQuery } = this.props;
+    const clauses = Lib.filters(query, stageIndex);
 
     if (!features.filter) {
       return;
     }
 
-    let enabled;
-    let filterList;
-    let addFilterButton;
-
-    const { isEditable } = Lib.queryDisplayInfo(query);
-
-    if (isEditable) {
-      enabled = true;
-
-      const filters = Lib.filters(query, stageIndex);
-      if (filters && filters.length > 0) {
-        filterList = (
-          <FilterWidgetList
+    return (
+      <div className={cx("Query-section")}>
+        <div className="Query-filters">
+          {clauses.map((clause, clauseIndex) => (
+            <FilterWidget
+              key={clauseIndex}
+              query={query}
+              stageIndex={stageIndex}
+              clause={clause}
+              onUpdate={newClause =>
+                setQuery(
+                  Lib.replaceClause(query, stageIndex, clause, newClause),
+                )
+              }
+              onRemove={() =>
+                setQuery(Lib.removeClause(query, stageIndex, clause))
+              }
+            />
+          ))}
+        </div>
+        <div className="mx2">
+          <FilterWidget
             query={query}
             stageIndex={stageIndex}
-            filters={filters}
-            updateFilter={(filter, newFilter) =>
-              setQuery(Lib.replaceClause(query, stageIndex, filter, newFilter))
-            }
-            removeFilter={filter =>
-              setQuery(Lib.removeClause(query, stageIndex, filter))
+            onAdd={newClause =>
+              setQuery(Lib.filter(query, stageIndex, newClause))
             }
           />
-        );
-      }
-
-      addFilterButton = this.renderAdd(
-        filterList ? null : t`Add filters to narrow your answer`,
-        () => this.setState({ isFilterPopoverOpened: true }),
-        "addFilterTarget",
-      );
-    } else {
-      enabled = false;
-      addFilterButton = this.renderAdd(
-        t`Add filters to narrow your answer`,
-        null,
-        "addFilterTarget",
-      );
-    }
-
-    return (
-      <div className={cx("Query-section", { disabled: !enabled })}>
-        <div className="Query-filters">{filterList}</div>
-        <div className="mx2">
-          <Popover
-            opened={this.state.isFilterPopoverOpened}
-            position="bottom-start"
-            transitionProps={{ duration: 0 }}
-            trapFocus
-            onClose={() => this.setState({ isFilterPopoverOpened: false })}
-          >
-            <Popover.Target>{addFilterButton}</Popover.Target>
-            <Popover.Dropdown>
-              <FilterPicker
-                query={query}
-                stageIndex={stageIndex}
-                onSelect={filter =>
-                  setQuery(Lib.filter(query, stageIndex, filter))
-                }
-                onClose={() => this.setState({ isFilterPopoverOpened: false })}
-              />
-            </Popover.Dropdown>
-          </Popover>
         </div>
       </div>
     );
   }
 
   renderAggregation() {
-    const { query, legacyQuery, features, supportMultipleAggregations } =
-      this.props;
-    const { isEditable } = Lib.queryDisplayInfo(query);
+    const { query, stageIndex, features, setQuery } = this.props;
+    const clauses = Lib.aggregations(query, stageIndex);
 
     if (!features.aggregation) {
       return;
     }
-    // aggregation clause.  must have table details available
-    if (isEditable) {
-      const aggregations = [...legacyQuery.aggregations()];
 
-      if (aggregations.length === 0) {
-        // add implicit rows aggregation
-        aggregations.push(["rows"]);
-      }
-
-      // Placeholder aggregation for showing the add button
-      if (supportMultipleAggregations && !legacyQuery.isBareRows()) {
-        aggregations.push(null);
-      }
-
-      const aggregationList = [];
-      for (const [index, aggregation] of aggregations.entries()) {
-        aggregationList.push(
+    return (
+      <div>
+        {clauses.map((clause, clauseIndex) => (
           <AggregationWidget
-            className="QueryOption p1"
-            key={"agg" + index}
-            aggregation={aggregation}
-            query={legacyQuery}
-            onChangeAggregation={aggregation =>
-              aggregation
-                ? console.error(
-                    legacyQuery.updateAggregation(index, aggregation),
-                  )
-                : console.error(legacyQuery.removeAggregation(index))
+            key={clauseIndex}
+            query={query}
+            stageIndex={stageIndex}
+            clause={clause}
+            onUpdate={newClause =>
+              setQuery(Lib.replaceClause(query, stageIndex, clause, newClause))
             }
-            showMetrics={false}
-            showRawData
-          >
-            {this.renderAdd(null)}
-          </AggregationWidget>,
-        );
-        if (
-          aggregations[index + 1] != null &&
-          aggregations[index + 1].length > 0
-        ) {
-          aggregationList.push(
-            <span key={"and" + index} className="text-bold">{t`and`}</span>,
-          );
-        }
-      }
-      return aggregationList;
-    } else {
-      // TODO: move this into AggregationWidget?
-      return (
-        <div className="Query-section Query-section-aggregation disabled">
-          <a className="QueryOption p1 flex align-center">{t`Raw data`}</a>
-        </div>
-      );
-    }
+          />
+        ))}
+        <AggregationWidget
+          query={query}
+          stageIndex={stageIndex}
+          onAdd={newClause =>
+            setQuery(Lib.aggregate(query, stageIndex, newClause))
+          }
+        />
+      </div>
+    );
   }
 
   renderDataSection() {
@@ -257,10 +191,7 @@ export class GuiQueryEditor extends Component {
     }
 
     return (
-      <div
-        className="GuiBuilder-section GuiBuilder-filtered-by flex align-center"
-        ref={this.filterSection}
-      >
+      <div className="GuiBuilder-section GuiBuilder-filtered-by flex align-center">
         <span className="GuiBuilder-section-label Query-label">{t`Filtered by`}</span>
         {this.renderFilters()}
       </div>
@@ -274,10 +205,7 @@ export class GuiQueryEditor extends Component {
     }
 
     return (
-      <div
-        className="GuiBuilder-section GuiBuilder-view flex align-center px1 pr2"
-        ref="viewSection"
-      >
+      <div className="GuiBuilder-section GuiBuilder-view flex align-center px1 pr2">
         <span className="GuiBuilder-section-label Query-label">{t`View`}</span>
         {this.renderAggregation()}
       </div>
