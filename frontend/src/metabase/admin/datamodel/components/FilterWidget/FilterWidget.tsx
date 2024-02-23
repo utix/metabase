@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { color } from "metabase/lib/colors";
@@ -10,6 +11,7 @@ type Props = {
   query: Lib.Query;
   stageIndex: number;
   clause?: Lib.FilterClause;
+  renderTarget?: (props: TargetProps) => ReactNode;
   onAdd?: (
     newClause: Lib.FilterClause | Lib.SegmentMetadata | Lib.ExpressionClause,
   ) => void;
@@ -19,6 +21,10 @@ type Props = {
   onRemove?: () => void;
 };
 
+type TargetProps = {
+  onClick: () => void;
+};
+
 /**
  * @deprecated use MLv2
  */
@@ -26,6 +32,7 @@ export function FilterWidget({
   query,
   stageIndex,
   clause,
+  renderTarget,
   onAdd,
   onUpdate,
   onRemove,
@@ -42,13 +49,17 @@ export function FilterWidget({
       onClose={() => setIsOpened(false)}
     >
       <Popover.Target>
-        <ViewPill
-          color={color("filter")}
-          onClick={() => setIsOpened(!isOpened)}
-          onRemove={onRemove}
-        >
-          {clauseInfo?.displayName}
-        </ViewPill>
+        {renderTarget ? (
+          renderTarget({ onClick: () => setIsOpened(!isOpened) })
+        ) : (
+          <ViewPill
+            color={color("filter")}
+            onClick={() => setIsOpened(!isOpened)}
+            onRemove={onRemove}
+          >
+            {clauseInfo?.displayName}
+          </ViewPill>
+        )}
       </Popover.Target>
       <Popover.Dropdown>
         <FilterPicker

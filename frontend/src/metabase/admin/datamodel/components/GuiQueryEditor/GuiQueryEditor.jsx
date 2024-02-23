@@ -51,29 +51,29 @@ export class GuiQueryEditor extends Component {
     supportMultipleAggregations: true,
   };
 
-  renderAdd(text, onClick, targetRefName) {
+  renderAdd(text, onClick) {
     const className =
       "AddButton text-light text-bold flex align-center text-medium-hover cursor-pointer no-decoration transition-color";
     if (onClick) {
       return (
         <a className={className} onClick={onClick}>
           {text && <span className="mr1">{text}</span>}
-          {this.renderAddIcon(targetRefName)}
+          {this.renderAddIcon()}
         </a>
       );
     } else {
       return (
         <span className={className}>
           {text && <span className="mr1">{text}</span>}
-          {this.renderAddIcon(targetRefName)}
+          {this.renderAddIcon()}
         </span>
       );
     }
   }
 
-  renderAddIcon(targetRefName) {
+  renderAddIcon() {
     return (
-      <IconBorder borderRadius="3px" ref={targetRefName}>
+      <IconBorder borderRadius="3px">
         <Icon name="add" />
       </IconBorder>
     );
@@ -111,6 +111,14 @@ export class GuiQueryEditor extends Component {
           <FilterWidget
             query={query}
             stageIndex={stageIndex}
+            renderTarget={({ onClick }) =>
+              this.renderAdd(
+                clauses.length > 0
+                  ? null
+                  : t`Add filters to narrow your answer`,
+                onClick,
+              )
+            }
             onAdd={newClause =>
               setQuery(Lib.filter(query, stageIndex, newClause))
             }
@@ -144,6 +152,7 @@ export class GuiQueryEditor extends Component {
         <AggregationWidget
           query={query}
           stageIndex={stageIndex}
+          renderTarget={({ onClick }) => this.renderAdd(null, onClick)}
           onAdd={newClause =>
             setQuery(Lib.aggregate(query, stageIndex, newClause))
           }

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { AggregationPicker } from "metabase/common/components/AggregationPicker";
@@ -10,8 +11,13 @@ type Props = {
   query: Lib.Query;
   stageIndex: number;
   clause?: Lib.AggregationClause;
+  renderTarget?: (props: TargetProps) => ReactNode;
   onAdd?: (newClause: Lib.Aggregable) => void;
   onUpdate?: (newClause: Lib.Aggregable) => void;
+};
+
+type TargetProps = {
+  onClick: () => void;
 };
 
 /**
@@ -21,6 +27,7 @@ export function AggregationWidget({
   query,
   stageIndex,
   clause,
+  renderTarget,
   onAdd,
   onUpdate,
 }: Props) {
@@ -40,12 +47,16 @@ export function AggregationWidget({
       onClose={() => setIsOpened(false)}
     >
       <Popover.Target>
-        <ViewPill
-          color={color("aggregation")}
-          onClick={() => setIsOpened(!isOpened)}
-        >
-          {clauseInfo?.displayName}
-        </ViewPill>
+        {renderTarget ? (
+          renderTarget({ onClick: () => setIsOpened(!isOpened) })
+        ) : (
+          <ViewPill
+            color={color("summarize")}
+            onClick={() => setIsOpened(!isOpened)}
+          >
+            {clauseInfo?.displayName}
+          </ViewPill>
+        )}
       </Popover.Target>
       <Popover.Dropdown>
         <AggregationPicker
