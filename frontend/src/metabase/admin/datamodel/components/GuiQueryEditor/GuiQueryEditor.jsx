@@ -32,10 +32,13 @@ export class GuiQueryEditor extends Component {
   };
 
   static propTypes = {
-    isShowingDataReference: PropTypes.bool.isRequired,
-    setDatasetQuery: PropTypes.func.isRequired,
+    query: PropTypes.object.isRequired,
+    stageIndex: PropTypes.number.isRequired,
+    metadata: PropTypes.object.isRequired,
+    setQuery: PropTypes.func.isRequired,
     features: PropTypes.object,
     supportMultipleAggregations: PropTypes.bool,
+    isShowingDataReference: PropTypes.bool.isRequired,
   };
 
   static defaultProps = {
@@ -78,7 +81,7 @@ export class GuiQueryEditor extends Component {
   }
 
   renderFilters() {
-    const { legacyQuery, query, features, setDatasetQuery } = this.props;
+    const { legacyQuery, query, features } = this.props;
 
     if (!features.filter) {
       return;
@@ -100,10 +103,10 @@ export class GuiQueryEditor extends Component {
             query={legacyQuery}
             filters={filters}
             removeFilter={index =>
-              setDatasetQuery(legacyQuery.removeFilter(index))
+              console.error(legacyQuery.removeFilter(index))
             }
             updateFilter={(index, filter) =>
-              setDatasetQuery(legacyQuery.updateFilter(index, filter))
+              console.error(legacyQuery.updateFilter(index, filter))
             }
           />
         );
@@ -141,7 +144,7 @@ export class GuiQueryEditor extends Component {
               isNew
               query={legacyQuery}
               onChangeFilter={filter =>
-                setDatasetQuery(legacyQuery.filter(filter))
+                console.error(legacyQuery.filter(filter))
               }
               onClose={() => this.filterPopover.current.close()}
             />
@@ -152,13 +155,8 @@ export class GuiQueryEditor extends Component {
   }
 
   renderAggregation() {
-    const {
-      query,
-      legacyQuery,
-      features,
-      setDatasetQuery,
-      supportMultipleAggregations,
-    } = this.props;
+    const { query, legacyQuery, features, supportMultipleAggregations } =
+      this.props;
     const { isEditable } = Lib.queryDisplayInfo(query);
 
     if (!features.aggregation) {
@@ -188,10 +186,10 @@ export class GuiQueryEditor extends Component {
             query={legacyQuery}
             onChangeAggregation={aggregation =>
               aggregation
-                ? setDatasetQuery(
+                ? console.error(
                     legacyQuery.updateAggregation(index, aggregation),
                   )
-                : setDatasetQuery(legacyQuery.removeAggregation(index))
+                : console.error(legacyQuery.removeAggregation(index))
             }
             showMetrics={false}
             showRawData
@@ -220,7 +218,18 @@ export class GuiQueryEditor extends Component {
   }
 
   renderDataSection() {
-    const { legacyQuery, query, setDatasetQuery } = this.props;
+    const { query, stageIndex, metadata, setQuery } = this.props;
+    const tableId = Lib.sourceTableOrCardId(query);
+    const table = tableId
+      ? Lib.tableOrCardMetadata(query, stageIndex, tableId)
+      : null;
+    const tableInfo = table ? Lib.displayInfo(query, stageIndex, table) : null;
+
+    const handleTableChange = (newTableId, newDatabaseId) => {
+      const metadataProvider = Lib.metadataProvider(newDatabaseId, metadata);
+      const newTable = Lib.tableOrCardMetadata(metadataProvider, newTableId);
+      setQuery(Lib.queryFromTableOrCardMetadata(metadataProvider, newTable));
+    };
 
     return (
       <div
@@ -231,16 +240,12 @@ export class GuiQueryEditor extends Component {
         <span className="GuiBuilder-section-label Query-label">{t`Data`}</span>
         {this.props.canChangeTable ? (
           <DatabaseSchemaAndTableDataSelector
-            selectedTableId={Lib.sourceTableOrCardId(query)}
-            setSourceTableFn={tableId =>
-              setDatasetQuery(
-                legacyQuery.setSourceTableId(tableId).datasetQuery(),
-              )
-            }
+            selectedTableId={tableId}
+            setSourceTableFn={handleTableChange}
           />
         ) : (
           <span className="flex align-center px2 py2 text-bold text-grey">
-            {legacyQuery.table() && legacyQuery.table().displayName()}
+            {tableInfo != null && tableInfo.displayName}
           </span>
         )}
       </div>

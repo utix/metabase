@@ -9,11 +9,8 @@ import Link from "metabase/core/components/Link";
 import Tables from "metabase/entities/tables";
 import * as Urls from "metabase/lib/urls";
 import { getMetadata } from "metabase/selectors/metadata";
-import Query from "metabase-lib/queries/Query";
-import {
-  getSegmentOrMetricQuestion,
-  getDefaultSegmentOrMetricQuestion,
-} from "metabase-lib/queries/utils/segments";
+import * as Lib from "metabase-lib";
+import { getSegmentOrMetricQuestion } from "metabase-lib/queries/utils/segments";
 
 import withTableMetadataLoaded from "../hoc/withTableMetadataLoaded";
 
@@ -38,40 +35,11 @@ class PartialQueryBuilder extends Component {
           "source-table": table.id,
         },
       });
-    } else {
-      this.maybeSetDefaultQuery();
     }
   }
 
-  componentDidUpdate() {
-    this.maybeSetDefaultQuery();
-  }
-
-  maybeSetDefaultQuery() {
-    const { metadata, table, value } = this.props;
-
-    // we need metadata and a table to generate a default query
-    if (!metadata || !table) {
-      return;
-    }
-
-    // only set the query if it doesn't already have an aggregation or filter
-    const question = getSegmentOrMetricQuestion(value, table, metadata);
-    if (!question.legacyQuery({ useStructuredQuery: true }).isRaw()) {
-      return;
-    }
-
-    const defaultQuestion = getDefaultSegmentOrMetricQuestion(table, metadata);
-    if (defaultQuestion) {
-      this.setDatasetQuery(defaultQuestion.datasetQuery());
-    }
-  }
-
-  setDatasetQuery = datasetQuery => {
-    if (datasetQuery instanceof Query) {
-      datasetQuery = datasetQuery.datasetQuery();
-    }
-
+  setQuery = query => {
+    const datasetQuery = Lib.toLegacyQuery(query);
     this.props.onChange(datasetQuery.query);
     this.props.updatePreviewSummary(datasetQuery);
   };
@@ -80,17 +48,17 @@ class PartialQueryBuilder extends Component {
     const { features, value, metadata, table, previewSummary } = this.props;
 
     const question = getSegmentOrMetricQuestion(value, table, metadata);
-    const legacyQuery = question.legacyQuery({ useStructuredQuery: true });
     const query = question.query();
     const previewUrl = Urls.serializedQuestion(question.card());
 
     return (
       <div className="py1">
         <GuiQueryEditor
-          features={features}
-          legacyQuery={legacyQuery}
           query={query}
-          setDatasetQuery={this.setDatasetQuery}
+          stageIndex={-1}
+          metadata={metadata}
+          features={features}
+          setQuery={this.setQuery}
           isShowingDataReference={false}
           supportMultipleAggregations={false}
           canChangeTable={this.props.canChangeTable}
