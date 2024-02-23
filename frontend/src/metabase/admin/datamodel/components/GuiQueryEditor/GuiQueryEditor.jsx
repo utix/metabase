@@ -8,6 +8,7 @@ import { t } from "ttag";
 
 import IconBorder from "metabase/components/IconBorder";
 import { DatabaseSchemaAndTableDataSelector } from "metabase/query_builder/components/DataSelector";
+import { FilterPicker } from "metabase/querying";
 import { Icon, Popover } from "metabase/ui";
 import * as Lib from "metabase-lib";
 
@@ -80,7 +81,7 @@ export class GuiQueryEditor extends Component {
   }
 
   renderFilters() {
-    const { query, stageIndex, features } = this.props;
+    const { query, stageIndex, features, setQuery } = this.props;
 
     if (!features.filter) {
       return;
@@ -102,8 +103,12 @@ export class GuiQueryEditor extends Component {
             query={query}
             stageIndex={stageIndex}
             filters={filters}
-            removeFilter={index => console.error(index)}
-            updateFilter={(index, filter) => console.error(index)}
+            updateFilter={(filter, newFilter) =>
+              setQuery(Lib.replaceClause(query, stageIndex, filter, newFilter))
+            }
+            removeFilter={filter =>
+              setQuery(Lib.removeClause(query, stageIndex, filter))
+            }
           />
         );
       }
@@ -137,7 +142,14 @@ export class GuiQueryEditor extends Component {
           >
             <Popover.Target>{addFilterButton}</Popover.Target>
             <Popover.Dropdown>
-              <div />
+              <FilterPicker
+                query={query}
+                stageIndex={stageIndex}
+                onSelect={filter =>
+                  setQuery(Lib.filter(query, stageIndex, filter))
+                }
+                onClose={() => this.setState({ isFilterPopoverOpened: false })}
+              />
             </Popover.Dropdown>
           </Popover>
         </div>

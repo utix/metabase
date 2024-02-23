@@ -30,7 +30,9 @@ const DEFAULT_FILTER_RENDERER = ({ field, operator, values }) => {
   );
 };
 
-const FilterPill = props => <ViewPill color={color("filter")} {...props} />;
+export const FilterPill = props => (
+  <ViewPill color={color("filter")} {...props} />
+);
 
 export const SimpleOperatorFilter = ({
   filter,

@@ -5,7 +5,6 @@ import { connect } from "react-redux";
 import { getMetadata } from "metabase/selectors/metadata";
 
 import { Filter } from "../Filter";
-import { filterWidgetFilterRenderer } from "../FilterWidget";
 
 const mapStateToProps = state => ({
   metadata: getMetadata(state),
@@ -13,7 +12,7 @@ const mapStateToProps = state => ({
 
 class _FilterList extends Component {
   static defaultProps = {
-    filterRenderer: filterWidgetFilterRenderer,
+    filterRenderer: null,
   };
 
   render() {
