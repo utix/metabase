@@ -221,9 +221,7 @@ export class GuiQueryEditor extends Component {
   renderDataSection() {
     const { query, stageIndex, metadata, setQuery } = this.props;
     const tableId = Lib.sourceTableOrCardId(query);
-    const table = tableId
-      ? Lib.tableOrCardMetadata(query, stageIndex, tableId)
-      : null;
+    const table = tableId ? Lib.tableOrCardMetadata(query, tableId) : null;
     const tableInfo = table ? Lib.displayInfo(query, stageIndex, table) : null;
 
     const handleTableChange = (newTableId, newDatabaseId) => {
