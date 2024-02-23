@@ -115,7 +115,7 @@ export class GuiQueryEditor extends Component {
 
       addFilterButton = this.renderAdd(
         filterList ? null : t`Add filters to narrow your answer`,
-        null,
+        () => this.setState({ isFilterPopoverOpened: true }),
         "addFilterTarget",
       );
     } else {
@@ -133,12 +133,10 @@ export class GuiQueryEditor extends Component {
         <div className="mx2">
           <Popover
             opened={this.state.isFilterPopoverOpened}
-            trapFocus
+            position="bottom-start"
             transitionProps={{ duration: 0 }}
-            onChange={isFilterPopoverOpened =>
-              this.setState({ isFilterPopoverOpened })
-            }
-            onClose={this.close}
+            trapFocus
+            onClose={() => this.setState({ isFilterPopoverOpened: false })}
           >
             <Popover.Target>{addFilterButton}</Popover.Target>
             <Popover.Dropdown>

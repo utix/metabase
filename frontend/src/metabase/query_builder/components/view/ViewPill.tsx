@@ -1,4 +1,6 @@
 import cx from "classnames";
+import type { Ref } from "react";
+import { forwardRef } from "react";
 
 import { color as c, alpha } from "metabase/lib/colors";
 import type { IconName } from "metabase/ui";
@@ -16,21 +18,25 @@ export interface ViewPillProps {
   onRemove?: () => void;
 }
 
-function ViewPill({
-  className,
-  style = {},
-  color = c("brand"),
-  invert,
-  children,
-  removeButtonLabel,
-  onClick,
-  onRemove,
-  icon,
-  ...props
-}: ViewPillProps) {
+const ViewPill = forwardRef(function ViewPill(
+  {
+    className,
+    style = {},
+    color = c("brand"),
+    invert,
+    children,
+    removeButtonLabel,
+    onClick,
+    onRemove,
+    icon,
+    ...props
+  }: ViewPillProps,
+  ref: Ref<HTMLSpanElement>,
+) {
   return (
     <span
       {...props}
+      ref={ref}
       className={cx("rounded flex align-center text-bold", className, {
         "cursor-pointer": onClick,
       })}
@@ -64,7 +70,7 @@ function ViewPill({
       )}
     </span>
   );
-}
+});
 
 // eslint-disable-next-line import/no-default-export
 export default ViewPill;

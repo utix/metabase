@@ -1,11 +1,9 @@
 import { useState } from "react";
 
-import ViewPill from "metabase/query_builder/components/view/ViewPill";
+import { FilterPill } from "metabase/admin/datamodel/components/Filter";
 import { FilterPicker } from "metabase/querying";
 import { Popover } from "metabase/ui";
 import * as Lib from "metabase-lib";
-
-import { FilterWidgetRoot } from "./FilterWidget.styled";
 
 type Props = {
   query: Lib.Query;
@@ -32,43 +30,30 @@ export function FilterWidget({
   const filterInfo = Lib.displayInfo(query, stageIndex, filter);
 
   return (
-    <FilterWidgetRoot isSelected={isOpened}>
-      <Popover
-        opened={isOpened}
-        trapFocus
-        transitionProps={{ duration: 0 }}
-        onChange={setIsOpened}
-      >
-        <Popover.Target>
-          <div className="flex justify-center">
-            <div className="flex flex-column justify-center">
-              <div
-                className="flex align-center"
-                style={{
-                  padding: "0.5em",
-                  paddingTop: "0.3em",
-                  paddingBottom: "0.3em",
-                  paddingLeft: 0,
-                }}
-              >
-                <ViewPill onRemove={() => removeFilter(filter)}>
-                  {" "}
-                  {filterInfo.displayName}
-                </ViewPill>
-              </div>
-            </div>
-          </div>
-        </Popover.Target>
-        <Popover.Dropdown>
-          <FilterPicker
-            query={query}
-            stageIndex={stageIndex}
-            filter={filter}
-            onSelect={newFilter => updateFilter(filter, newFilter)}
-            onClose={() => setIsOpened(false)}
-          />
-        </Popover.Dropdown>
-      </Popover>
-    </FilterWidgetRoot>
+    <Popover
+      opened={isOpened}
+      position="bottom-start"
+      transitionProps={{ duration: 0 }}
+      trapFocus
+      onClose={() => setIsOpened(false)}
+    >
+      <Popover.Target>
+        <FilterPill
+          onClick={() => setIsOpened(!isOpened)}
+          onRemove={() => removeFilter(filter)}
+        >
+          {filterInfo.displayName}
+        </FilterPill>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <FilterPicker
+          query={query}
+          stageIndex={stageIndex}
+          filter={filter}
+          onSelect={newFilter => updateFilter(filter, newFilter)}
+          onClose={() => setIsOpened(false)}
+        />
+      </Popover.Dropdown>
+    </Popover>
   );
 }

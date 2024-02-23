@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { forwardRef } from "react";
 import { t, ngettext, msgid } from "ttag";
 
 import Value from "metabase/components/Value";
@@ -30,9 +31,9 @@ const DEFAULT_FILTER_RENDERER = ({ field, operator, values }) => {
   );
 };
 
-export const FilterPill = props => (
-  <ViewPill color={color("filter")} {...props} />
-);
+export const FilterPill = forwardRef(function FilterPill(props, ref) {
+  return <ViewPill ref={ref} color={color("filter")} {...props} />;
+});
 
 export const SimpleOperatorFilter = ({
   filter,
