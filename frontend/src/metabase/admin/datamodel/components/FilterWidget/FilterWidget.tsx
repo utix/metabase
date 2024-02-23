@@ -45,7 +45,6 @@ export function FilterWidget({
       opened={isOpened}
       position="bottom-start"
       transitionProps={{ duration: 0 }}
-      trapFocus
       onClose={() => setIsOpened(false)}
     >
       <Popover.Target>

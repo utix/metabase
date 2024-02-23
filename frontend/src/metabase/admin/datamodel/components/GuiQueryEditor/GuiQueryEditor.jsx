@@ -149,14 +149,16 @@ export class GuiQueryEditor extends Component {
             }
           />
         ))}
-        <AggregationWidget
-          query={query}
-          stageIndex={stageIndex}
-          renderTarget={({ onClick }) => this.renderAdd(null, onClick)}
-          onAdd={newClause =>
-            setQuery(Lib.aggregate(query, stageIndex, newClause))
-          }
-        />
+        {clauses.length === 0 && (
+          <AggregationWidget
+            query={query}
+            stageIndex={stageIndex}
+            renderTarget={({ onClick }) => this.renderAdd(null, onClick)}
+            onAdd={newClause =>
+              setQuery(Lib.aggregate(query, stageIndex, newClause))
+            }
+          />
+        )}
       </div>
     );
   }
@@ -200,7 +202,7 @@ export class GuiQueryEditor extends Component {
     }
 
     return (
-      <div className="GuiBuilder-section GuiBuilder-filtered-by flex align-center">
+      <div className="GuiBuilder-section GuiBuilder-filtered-by flex align-center pl2">
         <span className="GuiBuilder-section-label Query-label">{t`Filtered by`}</span>
         {this.renderFilters()}
       </div>

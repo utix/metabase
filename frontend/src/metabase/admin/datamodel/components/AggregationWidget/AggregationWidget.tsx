@@ -43,7 +43,6 @@ export function AggregationWidget({
       opened={isOpened}
       position="bottom-start"
       transitionProps={{ duration: 0 }}
-      trapFocus
       onClose={() => setIsOpened(false)}
     >
       <Popover.Target>
