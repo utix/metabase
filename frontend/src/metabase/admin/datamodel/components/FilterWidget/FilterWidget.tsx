@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { FilterPill } from "metabase/admin/datamodel/components/Filter";
+import { color } from "metabase/lib/colors";
+import ViewPill from "metabase/query_builder/components/view/ViewPill";
 import { FilterPicker } from "metabase/querying";
 import { Popover } from "metabase/ui";
 import * as Lib from "metabase-lib";
@@ -38,12 +39,13 @@ export function FilterWidget({
       onClose={() => setIsOpened(false)}
     >
       <Popover.Target>
-        <FilterPill
+        <ViewPill
+          color={color("filter")}
           onClick={() => setIsOpened(!isOpened)}
           onRemove={() => removeFilter(filter)}
         >
           {filterInfo.displayName}
-        </FilterPill>
+        </ViewPill>
       </Popover.Target>
       <Popover.Dropdown>
         <FilterPicker
