@@ -190,6 +190,25 @@ export interface OpenAiModel {
 
 export type HelpLinkSetting = "metabase" | "hidden" | "custom";
 
+/**
+ * Important distinction between `null` and `undefined` settings values.
+ *  - `null` means that the setting actually has a value of `null`.
+ *  - `undefined` means that the user doesn't have permission to see the setting.
+ *
+ * Further longer explanation:
+ *
+ * `null` is a backend way of deleting a value, which can backfire on frontend if we are not
+ * aware of this distinction!
+ *
+ * Do not use `undefined` when checking does the setting have a value. Use `null` instead.
+ * Use `undefined` only when checking does the user have permission to see the setting.
+ *
+ * To further complicate things, there are two endpoints for fetching settings:
+ *  - `GET /api/setting` that _can only be used by admins!_
+ *  - `GET /api/session/properties` that can be used by any user, but settings might be omitted.
+ *
+ * SettingsApi will return `403` for non-admins, while SessionApi will return `200`.
+ */
 export interface Settings {
   "active-users-count"?: number;
   "admin-email": string;
