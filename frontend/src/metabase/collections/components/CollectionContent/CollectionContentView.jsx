@@ -18,6 +18,7 @@ import Search from "metabase/entities/search";
 import { useListSelect } from "metabase/hooks/use-list-select";
 import { usePagination } from "metabase/hooks/use-pagination";
 import { useToggle } from "metabase/hooks/use-toggle";
+import { Switch, Flex } from "metabase/ui";
 
 import { ModelUploadModal } from "../ModelUploadModal";
 import UploadOverlay from "../UploadOverlay";
@@ -64,6 +65,8 @@ export function CollectionContentView({
     sort_column: "name",
     sort_direction: "asc",
   });
+
+  const [showQuestions, setShowQuestions] = useState(false);
 
   const [
     isModelUploadModalOpen,
@@ -295,8 +298,21 @@ export function CollectionContentView({
                       );
                     }
 
+                    if (!showQuestions) {
+                      unpinnedItems = unpinnedItems.filter(
+                        item => item.model !== "card",
+                      );
+                    }
+
                     return (
                       <CollectionTable data-testid="collection-table">
+                        <Flex justify="end" mb="md">
+                          <Switch
+                            value={showQuestions ? "on" : "off"}
+                            onChange={e => setShowQuestions(e.target.checked)}
+                            label="Show questions"
+                          />
+                        </Flex>
                         <ItemsTable
                           databases={databases}
                           bookmarks={bookmarks}
