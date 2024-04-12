@@ -11,6 +11,7 @@
    [metabase.api.common.validation :as validation]
    [metabase.api.dataset :as api.dataset]
    [metabase.automagic-dashboards.populate :as populate]
+   [metabase.branch :as branch]
    [metabase.email.messages :as messages]
    [metabase.events :as events]
    [metabase.legacy-mbql.normalize :as mbql.normalize]
@@ -252,7 +253,8 @@
         collection.root/hydrate-root-collection
         api/check-not-archived
         hide-unreadable-cards
-        add-query-average-durations)))
+        add-query-average-durations
+        branch/maybe-project-dashboard)))
 
 (defn- cards-to-copy
   "Returns a map of which cards we need to copy and which are not to be copied. The `:copy` key is a map from id to
@@ -417,7 +419,8 @@
   [id]
   {id ms/PositiveInt}
   (let [dashboard (get-dashboard id)]
-    (events/publish-event! :event/dashboard-read {:object dashboard :user-id api/*current-user-id*})
+    ;; todo schema broke:
+    #_(events/publish-event! :event/dashboard-read {:object dashboard :user-id api/*current-user-id*})
     (last-edit/with-last-edit-info dashboard :dashboard)))
 
 (defn- check-allowed-to-change-embedding

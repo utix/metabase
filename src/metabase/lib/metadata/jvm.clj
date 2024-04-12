@@ -2,6 +2,7 @@
   "Implementation(s) of [[metabase.lib.metadata.protocols/MetadataProvider]] only for the JVM."
   (:require
    [clojure.string :as str]
+   [metabase.branch :as branch]
    [metabase.lib.metadata :as lib.metadata]
    [metabase.lib.metadata.cached-provider :as lib.metadata.cached-provider]
    [metabase.lib.metadata.protocols :as lib.metadata.protocols]
@@ -354,9 +355,10 @@
                       {})))
     (t2/select-one :metadata/database database-id))
 
+  ;; TODO: move these changes up into the protocol when we do it for real
   (table         [_this table-id]   (t2/select-one :metadata/table         :id table-id   :db_id       database-id))
   (field         [_this field-id]   (t2/select-one :metadata/column        :id field-id   :table/db_id database-id))
-  (card          [_this card-id]    (t2/select-one :metadata/card          :id card-id    :database_id database-id))
+  (card          [_this card-id]    (branch/maybe-do-projection (t2/select-one :metadata/card          :id card-id    :database_id database-id)))
   (legacy-metric [_this metric-id]  (t2/select-one :metadata/legacy-metric :id metric-id  :table/db_id database-id))
   (segment       [_this segment-id] (t2/select-one :metadata/segment       :id segment-id :table/db_id database-id))
 
@@ -388,9 +390,11 @@
                             :metadata/card  :database_id
                             :table/db_id)]
       (when (seq ids)
-        (t2/select metadata-type
-                   database-id-key database-id
-                   :id             [:in (set ids)]))))
+        (map
+         branch/maybe-do-projection
+         (t2/select metadata-type
+                    database-id-key database-id
+                    :id             [:in (set ids)])))))
 
   pretty/PrettyPrintable
   (pretty [_this]

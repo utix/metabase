@@ -46,7 +46,8 @@
    [metabase.util.malli.registry :as mr]
    [metabase.util.malli.schema :as ms]
    [steffan-westcott.clj-otel.api.trace.span :as span]
-   [toucan2.core :as t2]))
+   [toucan2.core :as t2]
+   [metabase.branch :as branch]))
 
 (set! *warn-on-reflection* true)
 
@@ -213,7 +214,9 @@
   [id ignore_view]
   {id ms/PositiveInt
    ignore_view [:maybe :boolean]}
-  (let [raw-card (t2/select-one Card :id id)
+  (let [raw-card (if @branch/*mode-enabled?
+                   (branch/projection (t2/select-one Card :id id))
+                   (t2/select-one Card :id id))
         card (-> raw-card
                  api/read-check
                  hydrate-card-details
