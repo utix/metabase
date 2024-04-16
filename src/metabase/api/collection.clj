@@ -81,12 +81,10 @@
 
   To select only personal collections, pass in `personal-only` as `true`.
   This will select only collections where `personal_owner_id` is not `nil`."
-  [{:keys [archived exclude-other-user-collections namespace shallow collection-id personal-only permissions-set]}]
+  [{:keys [exclude-other-user-collections namespace shallow collection-id personal-only permissions-set]}]
   (cond->>
    (t2/select :model/Collection
               {:where [:and
-                       (when (some? archived)
-                         [:= :archived archived])
                        (when shallow
                          (location-from-collection-id-clause collection-id))
                        (when personal-only
@@ -120,8 +118,7 @@
    namespace                      [:maybe ms/NonBlankString]
    personal-only                  [:maybe ms/BooleanValue]}
   (as->
-   (select-collections {:archived                       archived
-                        :exclude-other-user-collections exclude-other-user-collections
+   (select-collections {:exclude-other-user-collections exclude-other-user-collections
                         :namespace                      namespace
                         :shallow                        false
                         :personal-only                  personal-only
@@ -191,9 +188,7 @@
    namespace                      [:maybe ms/NonBlankString]
    shallow                        [:maybe :boolean]
    collection-id                  [:maybe ms/PositiveInt]}
-  (let [archived    (if exclude-archived false nil)
-        collections (select-collections {:archived                       archived
-                                         :exclude-other-user-collections exclude-other-user-collections
+  (let [collections (select-collections {:exclude-other-user-collections exclude-other-user-collections
                                          :namespace                      namespace
                                          :shallow                        shallow
                                          :collection-id                  collection-id
@@ -205,8 +200,7 @@
                                         {:dataset #{}
                                          :card    #{}}
                                         (mdb.query/reducible-query {:select-distinct [:collection_id :type]
-                                                                    :from            [:report_card]
-                                                                    :where           [:= :archived false]}))
+                                                                    :from            [:report_card]}))
             collections-with-details (map collection/personal-collection-with-ui-details collections)]
         (collection/collections->tree collection-type-ids collections-with-details)))))
 
@@ -241,7 +235,6 @@
 
 (def ^:private CollectionChildrenOptions
   [:map
-   [:archived?                     :boolean]
    [:pinned-state {:optional true} [:maybe (into [:enum] (map keyword) valid-pinned-state-values)]]
    ;; when specified, only return results of this type.
    [:models       {:optional true} [:maybe [:set (into [:enum] (map keyword) valid-model-param-values)]]]
@@ -372,7 +365,7 @@
             :moderated_status :icon :personal_owner_id :collection_preview
             :dataset_query :table_id :query_type :is_upload)))
 
-(defn- card-query [dataset? collection {:keys [archived? pinned-state]}]
+(defn- card-query [dataset? collection {:keys [pinned-state]}]
   (-> {:select    (cond->
                     [:c.id :c.name :c.description :c.entity_id :c.collection_position :c.display :c.collection_preview
                      :c.dataset_query
@@ -403,7 +396,6 @@
                    [:core_user :u] [:= :u.id :r.user_id]]
        :where     [:and
                    [:= :collection_id (:id collection)]
-                   [:= :archived (boolean archived?)]
                    [:= :c.type (h2x/literal (if dataset? "model" "question"))]]}
       (cond-> dataset?
         (-> (sql.helpers/select :c.table_id :t.is_upload :c.query_type)
@@ -478,7 +470,7 @@
   [_ _ rows]
   (map post-process-card-row rows))
 
-(defn- dashboard-query [collection {:keys [archived? pinned-state]}]
+(defn- dashboard-query [collection {:keys [pinned-state]}]
   (-> {:select    [:d.id :d.name :d.description :d.entity_id :d.collection_position
                    [(h2x/literal "dashboard") :model]
                    [:u.id :last_edit_user]
@@ -493,8 +485,7 @@
                                    [:= :r.model (h2x/literal "Dashboard")]]
                    [:core_user :u] [:= :u.id :r.user_id]]
        :where     [:and
-                   [:= :collection_id (:id collection)]
-                   [:= :archived (boolean archived?)]]}
+                   [:= :collection_id (:id collection)]]}
       (sql.helpers/where (pinned-state->clause pinned-state))))
 
 (defmethod collection-children-query :dashboard
@@ -518,10 +509,9 @@
    [:not= :namespace (u/qualified-name "snippets")]])
 
 (defn- collection-query
-  [collection {:keys [archived? collection-namespace pinned-state]}]
+  [collection {:keys [collection-namespace pinned-state]}]
   (-> (assoc (collection/effective-children-query
               collection
-              [:= :archived archived?]
               (perms/audit-namespace-clause :namespace (u/qualified-name collection-namespace))
               (snippets-collection-filter-clause))
              ;; We get from the effective-children-query a normal set of columns selected:
@@ -561,14 +551,12 @@
                 (mdb.query/reducible-query {:select-distinct [:collection_id :type]
                                             :from            [:report_card]
                                             :where           [:and
-                                                              [:= :archived false]
                                                               [:in :collection_id descendant-collection-ids]]}))
 
         collections-containing-dashboards
         (->> (t2/query {:select-distinct [:collection_id]
                         :from :report_dashboard
                         :where [:and
-                                [:= :archived false]
                                 [:in :collection_id descendant-collection-ids]]})
              (map :collection_id)
              (into #{}))
@@ -971,10 +959,17 @@
    authority_level [:maybe collection/AuthorityLevel]}
   (create-collection! body))
 
-;; TODO - I'm not 100% sure it makes sense that moving a Collection requires a special call to `move-collection!`,
-;; while archiving is handled automatically as part of the `pre-update` logic when you change a Collection's
-;; `archived` value. They are both recursive operations; couldn't we just have moving happen automatically when you
-;; change a `:location` as well?
+(defn- maybe-send-archived-notifications!
+  "When a collection is archived, all of it's cards are also marked as archived, but this is down in the model layer
+  which will not cause the archive notification code to fire. This will delete the relevant alerts and notify the
+  users just as if they had be archived individually via the card API."
+  [& {:keys [collection-before-update collection-updates actor]}]
+  (when (api/column-will-change? :archived collection-before-update collection-updates)
+    (when-let [alerts (seq (pulse/retrieve-alerts-for-cards
+                            {:card-ids (t2/select-pks-set Card :collection_id (u/the-id collection-before-update))}))]
+      (card/delete-alert-and-notify-archived! {:alerts alerts :actor actor}))))
+
+
 (defn- move-collection-if-needed!
   "If input the `PUT /api/collection/:id` endpoint (`collection-updates`) specify that we should *move* a Collection, do
   appropriate permissions checks and move it (and its descendants)."
@@ -996,27 +991,40 @@
         ;; ok, we're good to move!
         (collection/move-collection! collection-before-update new-location)))))
 
-(defn- check-allowed-to-archive-or-unarchive
-  "If input the `PUT /api/collection/:id` endpoint (`collection-updates`) specify that we should change the `archived`
-  status of a Collection, do appropriate permissions checks. (Actual recurisve (un)archiving logic is handled by
-  Collection's `pre-update`, so we do not need to manually call `collection/archive-collection!` and the like in this
-  namespace.)"
+(defn- archive-collection-if-needed!
+  "If input to the `PUT /api/collection/:id` endpoint specifies that we should archive a collection, do the appropriate
+  permissions checks and then move it to the trash."
   [collection-before-update collection-updates]
-  (when (api/column-will-change? :archived collection-before-update collection-updates)
-    ;; Check that we have approprate perms
-    (api/check-403
-     (perms/set-has-full-permissions-for-set? @api/*current-user-permissions-set*
-       (collection/perms-for-archiving collection-before-update)))))
+  (when (contains? collection-updates :archived)
+    (let [new-parent-id (cond
+                          (:archived collection-updates) collection/TRASH_COLLECTION_ID
+                          (contains? collection-updates :parent_id) (:parent_id collection-updates)
+                          (:trashed_from_location collection-before-update) (collection/location-path->parent-id
+                                                                             (:trashed_from_location collection-before-update))
+                          :else (throw
+                                 (ex-info (tru "You must specify a new `parent_id` to un-trash to.")
+                                          {:status-code 400})))]
+      (move-collection-if-needed!
+       collection-before-update
+       (assoc collection-updates :parent_id new-parent-id))
+      (maybe-send-archived-notifications! {:collection-before-update collection-before-update
+                                           :collection-updates       collection-updates
+                                           :actor                    @api/*current-user*}))))
 
-(defn- maybe-send-archived-notifications!
-  "When a collection is archived, all of it's cards are also marked as archived, but this is down in the model layer
-  which will not cause the archive notification code to fire. This will delete the relevant alerts and notify the
-  users just as if they had be archived individually via the card API."
-  [& {:keys [collection-before-update collection-updates actor]}]
-  (when (api/column-will-change? :archived collection-before-update collection-updates)
-    (when-let [alerts (seq (pulse/retrieve-alerts-for-cards
-                            {:card-ids (t2/select-pks-set Card :collection_id (u/the-id collection-before-update))}))]
-      (card/delete-alert-and-notify-archived! {:alerts alerts :actor actor}))))
+
+(defn- move-or-archive-collection-if-needed!
+  "If input to the `PUT /api/collection/:id` endpoint (`collection-updates`) specifies that we should either move or
+  archive the collection (archiving means 'moving to the trash' so it makes sense to deal with them together), do the
+  appropriate permissions checks and changes."
+  [collection-before-update collection-updates]
+  (cond
+    ;; note that archiving includes a move. So if they include `archived` (with or without `parent_id`), that's an
+    ;; archive/unarchive. If they only include `parent_id`, that's a move.
+    (contains? collection-updates :archived)
+    (archive-collection-if-needed! collection-before-update collection-updates)
+
+    (contains? collection-updates :parent_id)
+    (move-collection-if-needed! collection-before-update collection-updates)))
 
 (api/defendpoint PUT "/:id"
   "Modify an existing Collection, including archiving or unarchiving it, or moving it."
@@ -1029,8 +1037,6 @@
    authority_level [:maybe collection/AuthorityLevel]}
   ;; do we have perms to edit this Collection?
   (let [collection-before-update (api/write-check Collection id)]
-    ;; if we're trying to *archive* the Collection, make sure we're allowed to do that
-    (check-allowed-to-archive-or-unarchive collection-before-update collection-updates)
     ;; if authority_level is changing, make sure we're allowed to do that
     (when (and (contains? collection-updates :authority_level)
                (not= (keyword authority_level) (:authority_level collection-before-update)))
@@ -1038,15 +1044,11 @@
       (api/check-403 api/*is-superuser?*))
     ;; ok, go ahead and update it! Only update keys that were specified in the `body`. But not `parent_id` since
     ;; that's not actually a property of Collection, and since we handle moving a Collection separately below.
-    (let [updates (u/select-keys-when collection-updates :present [:name :description :archived :authority_level])]
+    (let [updates (u/select-keys-when collection-updates :present [:name :description :authority_level])]
       (when (seq updates)
         (t2/update! Collection id updates)))
-    ;; if we're trying to *move* the Collection (instead or as well) go ahead and do that
-    (move-collection-if-needed! collection-before-update collection-updates)
-    ;; if we *did* end up archiving this Collection, we most post a few notifications
-    (maybe-send-archived-notifications! {:collection-before-update collection-before-update
-                                         :collection-updates       collection-updates
-                                         :actor                    @api/*current-user*}))
+    ;; if we're trying to move or archive the Collection, go ahead and do that
+    (move-or-archive-collection-if-needed! collection-before-update collection-updates))
   ;; finally, return the updated object
   (collection-detail (t2/select-one Collection :id id)))
 

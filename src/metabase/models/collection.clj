@@ -45,6 +45,27 @@
   "Maximum number of characters allowed in a Collection `slug`."
   510)
 
+(def ^:const TRASH_COLLECTION_ID
+  "The fixed ID of the trash collection."
+  13371339)
+
+(defn trash-collection
+  "Gets the Trash collection from the database."
+  []
+  (t2/select-one :model/Collection :id TRASH_COLLECTION_ID))
+
+(def ^:private trash-path
+  "The fixed location path for the trash collection."
+  (format "/%s/" TRASH_COLLECTION_ID))
+
+(defn ensure-trash-collection-created!
+  "Creates the trash collection if it does not already exist."
+  []
+  (when (nil? (trash-collection))
+    (t2/insert! :model/Collection {:id TRASH_COLLECTION_ID
+                                   :name "Trash"
+                                   :type "trash"})))
+
 (def Collection
   "Used to be the toucan1 model name defined using [[toucan.models/defmodel]], no2 it's a reference to the toucan2 model name.
   We'll keep this till we replace all the Card symbol in our codebase."
@@ -231,9 +252,12 @@
 
 (mu/defn ^:private parent :- CollectionWithLocationAndIDOrRoot
   "Fetch the parent Collection of `collection`, or the Root Collection special placeholder object if this is a
-  top-level Collection."
+  top-level Collection. Note that the `parent` of a `collection` that's in the trash is the collection it was trashed
+  *from*."
   [collection :- CollectionWithLocationOrRoot]
-  (if-let [new-parent-id (location-path->parent-id (:location collection))]
+  (if-let [new-parent-id (location-path->parent-id (or (when (:archived collection)
+                                                         (:trashed_from_location collection))
+                                                       (:location collection)))]
     (t2/select-one Collection :id new-parent-id)
     root-collection))
 
@@ -301,7 +325,7 @@
   ([collection-ids :- VisibleCollections]
    (visible-collection-ids->honeysql-filter-clause :collection_id collection-ids))
 
-  ([collection-id-field :- :keyword
+  ([collection-id-field :- :any
     collection-ids      :- VisibleCollections]
    (if (= collection-ids :all)
      true
@@ -590,11 +614,10 @@
   (when (t2/exists? Collection :id (u/the-id collection), :personal_owner_id [:not= nil])
     (throw (Exception. (tru "You cannot archive a Personal Collection."))))
   (set
-   (for [collection-or-id (cons
-                           (parent collection)
-                           (cons
-                            collection
-                            (t2/select-pks-set Collection :location [:like (str (children-location collection) "%")])))]
+   (for [collection-or-id (conj
+                           (t2/select-pks-set Collection :location [:like (str (children-location collection) "%")])
+                           collection
+                           (parent collection))]
      (perms/collection-readwrite-path collection-or-id))))
 
 (mu/defn perms-for-moving :- [:set perms.u/PathSchema]
@@ -629,21 +652,6 @@
    (cons (perms/collection-readwrite-path new-parent)
          (perms-for-archiving collection))))
 
-(mu/defn move-collection!
-  "Move a Collection and all its descendant Collections from its current `location` to a `new-location`."
-  [collection :- CollectionWithLocationAndIDOrRoot, new-location :- LocationPath]
-  (let [orig-children-location (children-location collection)
-        new-children-location  (children-location (assoc collection :location new-location))]
-    ;; first move this Collection
-    (log/infof "Moving Collection %s and its descendants from %s to %s"
-               (u/the-id collection) (:location collection) new-location)
-    (t2/with-transaction [_conn]
-      (t2/update! Collection (u/the-id collection) {:location new-location})
-      ;; we need to update all the descendant collections as well...
-      (t2/query-one
-       {:update :collection
-        :set    {:location [:replace :location orig-children-location new-children-location]}
-        :where  [:like :location (str orig-children-location "%")]}))))
 
 (mu/defn ^:private collection->descendant-ids :- [:maybe [:set ms/PositiveInt]]
   [collection :- CollectionWithLocationAndIDOrRoot, & additional-conditions]
@@ -651,36 +659,32 @@
          :location [:like (str (children-location collection) "%")]
          additional-conditions))
 
-(mu/defn ^:private archive-collection!
-  "Archive a Collection and its descendant Collections and their Cards, Dashboards, and Pulses."
-  [collection :- CollectionWithLocationAndIDOrRoot]
-  (let [affected-collection-ids (cons (u/the-id collection)
-                                      (collection->descendant-ids collection, :archived false))]
-    (t2/with-transaction [_conn]
-      (t2/update! (t2/table-name Collection)
-                  {:id       [:in affected-collection-ids]
-                   :archived false}
-                  {:archived true})
-     (doseq [model '[Card Dashboard NativeQuerySnippet Pulse]]
-       (t2/update! model {:collection_id [:in affected-collection-ids]
-                           :archived      false}
-                    {:archived true})))))
-
-(mu/defn ^:private unarchive-collection!
-  "Unarchive a Collection and its descendant Collections and their Cards, Dashboards, and Pulses."
-  [collection :- CollectionWithLocationAndIDOrRoot]
-  (let [affected-collection-ids (cons (u/the-id collection)
-                                      (collection->descendant-ids collection, :archived true))]
-    (t2/with-transaction [_conn]
-      (t2/update! (t2/table-name Collection)
-               {:id       [:in affected-collection-ids]
-                :archived true}
-               {:archived false})
-      (doseq [model '[Card Dashboard NativeQuerySnippet Pulse]]
-        (t2/update! model {:collection_id [:in affected-collection-ids]
-                           :archived      true}
-                   {:archived false})))))
-
+(mu/defn move-collection!
+  "Move a Collection and all its descendant Collections from its current `location` to a `new-location`."
+  [collection :- CollectionWithLocationAndIDOrRoot, new-location :- LocationPath]
+  (let [orig-children-location (children-location collection)
+        new-children-location  (children-location (assoc collection :location new-location))
+        will-be-trashed? (str/starts-with? new-location trash-path)]
+    ;; first move this Collection
+    (log/infof "Moving Collection %s and its descendants from %s to %s"
+               (u/the-id collection) (:location collection) new-location)
+    (let [affected-collection-ids (cons (u/the-id collection)
+                                        (collection->descendant-ids collection, :archived false))]
+      (t2/with-transaction [_conn]
+        (t2/update! Collection (u/the-id collection)
+                    {:location new-location
+                     :trashed_from_location (when will-be-trashed? (:location collection))
+                     :archived will-be-trashed?})
+        ;; we need to update all the descendant collections as well...
+        (t2/query-one
+         {:update :collection
+          :set    {:location [:replace :location orig-children-location new-children-location]
+                   :archived will-be-trashed?}
+          :where  [:like :location (str orig-children-location "%")]})
+        (doseq [model [:model/Card :model/Dashboard :model/NativeQuerySnippet :model/Pulse]]
+          (t2/update! model
+                      {:collection_id [:in affected-collection-ids]}
+                      {:archived will-be-trashed?}))))))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                       Toucan IModel & Perms Method Impls                                       |
@@ -782,22 +786,6 @@
       (throw
        (ex-info msg {:status-code 400 :errors {k msg}})))))
 
-(mu/defn ^:private maybe-archive-or-unarchive!
-  "If `:archived` specified in the updates map, archive/unarchive as needed."
-  [collection-before-updates :- CollectionWithLocationAndIDOrRoot
-   collection-updates        :- :map]
-  ;; If the updates map contains a value for `:archived`, see if it's actually something different than current value
-  (when (api/column-will-change? :archived collection-before-updates collection-updates)
-    ;; check to make sure we're not trying to change location at the same time
-    (when (api/column-will-change? :location collection-before-updates collection-updates)
-      (throw (ex-info (tru "You cannot move a Collection and archive it at the same time.")
-               {:status-code 400
-                :errors      {:archived (tru "You cannot move a Collection and archive it at the same time.")}})))
-    ;; ok, go ahead and do the archive/unarchive operation
-    ((if (:archived collection-updates)
-       archive-collection!
-       unarchive-collection!) collection-before-updates)))
-
 ;; MOVING COLLECTIONS ACROSS "PERSONAL" BOUNDARIES
 ;;
 ;; As mentioned elsewhere, Permissions for Collections are handled in two different, incompatible, ways, depending on
@@ -896,9 +884,7 @@
     (when (api/column-will-change? :location collection-before-updates collection-updates)
       (update-perms-when-moving-across-personal-boundry! collection-before-updates collection-updates))
     ;; OK, AT THIS POINT THE CHANGES ARE VALIDATED. NOW START ISSUING UPDATES
-    ;; (1) archive or unarchive as appropriate
-    (maybe-archive-or-unarchive! collection-before-updates collection-updates)
-    ;; (2) slugify the collection name in case it's changed in the output; the results of this will get passed along
+    ;; slugify the collection name in case it's changed in the output; the results of this will get passed along
     ;; to Toucan's `update!` impl
     (cond-> collection-updates
       collection-name (assoc :slug (slugify collection-name)))))
