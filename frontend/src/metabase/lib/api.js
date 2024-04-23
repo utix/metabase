@@ -17,7 +17,7 @@ const DEFAULT_OPTIONS = {
   json: true,
   hasBody: false,
   noEvent: false,
-  transformResponse: ({ body }) => body,
+  transformResponse: o => o,
   raw: {},
   headers: {},
   retry: false,
@@ -218,7 +218,7 @@ export class Api extends EventEmitter {
           }
           if (status >= 200 && status <= 299) {
             if (options.transformResponse) {
-              body = options.transformResponse({ body, data });
+              body = options.transformResponse(body, { data });
             }
             resolve(body);
           } else {
@@ -290,8 +290,7 @@ export class Api extends EventEmitter {
 
           if (status >= 200 && status <= 299) {
             if (options.transformResponse) {
-              body = options.transformResponse({
-                body,
+              body = options.transformResponse(body, {
                 data,
                 response: unreadResponse,
               });
