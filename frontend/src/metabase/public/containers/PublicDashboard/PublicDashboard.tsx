@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { isRejectedWithValue } from "@reduxjs/toolkit";
 import cx from "classnames";
 import type { Location } from "history";
 import { assoc } from "icepick";
@@ -130,7 +131,7 @@ class PublicDashboardInner extends Component<
       queryParams: location.query,
     });
 
-    if (result.error) {
+    if (isRejectedWithValue(result)) {
       setErrorPage(result.payload);
       return;
     }
@@ -153,7 +154,10 @@ class PublicDashboardInner extends Component<
     this.props.cancelFetchDashboardCardData();
   }
 
-  async componentDidUpdate(prevProps: PublicDashboardProps, prevState: { dashboardId: DashboardId }) {
+  async componentDidUpdate(
+    prevProps: PublicDashboardProps,
+    prevState: { dashboardId: DashboardId },
+  ) {
     if (this.state.dashboardId !== prevState.dashboardId) {
       return this._initialize();
     }
@@ -229,8 +233,12 @@ class PublicDashboardInner extends Component<
           buttons.length > 0 && <div className={CS.flex}>{buttons}</div>
         }
         dashboardTabs={
-          dashboard?.tabs && dashboard.tabs.length > 1 && (
-            <DashboardTabs dashboardId={this.state.dashboardId} location={this.props.location} />
+          dashboard?.tabs &&
+          dashboard.tabs.length > 1 && (
+            <DashboardTabs
+              dashboardId={this.state.dashboardId}
+              location={this.props.location}
+            />
           )
         }
       >
@@ -264,6 +272,8 @@ class PublicDashboardInner extends Component<
 
 export const PublicDashboard = _.compose(
   connect(mapStateToProps, mapDispatchToProps),
-  title(({ dashboard }: {dashboard: Dashboard}) => dashboard && dashboard.name),
+  title(
+    ({ dashboard }: { dashboard: Dashboard }) => dashboard && dashboard.name,
+  ),
   DashboardControls,
 )(PublicDashboardInner);
