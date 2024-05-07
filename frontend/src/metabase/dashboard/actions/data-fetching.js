@@ -5,11 +5,7 @@ import { t } from "ttag";
 import { showAutoApplyFiltersToast } from "metabase/dashboard/actions/parameters";
 import { IS_EMBED_PREVIEW } from "metabase/lib/embed";
 import { defer } from "metabase/lib/promise";
-import {
-  createAction,
-  createAsyncThunk,
-  createThunkAction,
-} from "metabase/lib/redux";
+import { createAction, createThunkAction } from "metabase/lib/redux";
 import { equals } from "metabase/lib/utils";
 import { getDashboardUiParameters } from "metabase/parameters/utils/dashboards";
 import { getParameterValuesByIdFromQueryParams } from "metabase/parameters/utils/parameter-values";
@@ -139,156 +135,154 @@ const loadingComplete = createThunkAction(
 
 let fetchDashboardCancellation;
 
-export const fetchDashboard = createAsyncThunk(
+export const fetchDashboard = createThunkAction(
   "metabase/dashboard/FETCH_DASHBOARD",
-  async (
-    {
+  ({
       dashId,
       queryParams,
       options: { preserveParameters = false, clearCache = true } = {},
-    },
-    { getState, dispatch, rejectWithValue },
-  ) => {
-    if (fetchDashboardCancellation) {
-      fetchDashboardCancellation.resolve();
-    }
-    fetchDashboardCancellation = defer();
-
-    try {
-      let entities;
-      let result;
-
-      const dashboardType = getDashboardType(dashId);
-      const loadedDashboard = getDashboardById(getState(), dashId);
-
-      if (!clearCache && loadedDashboard) {
-        entities = {
-          dashboard: { [dashId]: loadedDashboard },
-          dashcard: Object.fromEntries(
-            loadedDashboard.dashcards.map(id => [
-              id,
-              getDashCardById(getState(), id),
-            ]),
-          ),
-        };
-        result = denormalize(dashId, dashboard, entities);
-      } else if (dashboardType === "public") {
-        result = await PublicApi.dashboard(
-          { uuid: dashId },
-          { cancelled: fetchDashboardCancellation.promise },
-        );
-        result = {
-          ...result,
-          id: dashId,
-          dashcards: result.dashcards.map(dc => ({
-            ...dc,
-            dashboard_id: dashId,
-          })),
-        };
-      } else if (dashboardType === "embed") {
-        result = await EmbedApi.dashboard(
-          { token: dashId },
-          { cancelled: fetchDashboardCancellation.promise },
-        );
-        result = {
-          ...result,
-          id: IS_EMBED_PREVIEW ? result.id : dashId,
-          dashcards: result.dashcards.map(dc => ({
-            ...dc,
-            dashboard_id: dashId,
-          })),
-        };
-      } else if (dashboardType === "transient") {
-        const subPath = dashId.split("/").slice(3).join("/");
-        result = await AutoApi.dashboard(
-          { subPath },
-          { cancelled: fetchDashboardCancellation.promise },
-        );
-        result = {
-          ...result,
-          id: dashId,
-          dashcards: result.dashcards.map(dc => ({
-            ...dc,
-            dashboard_id: dashId,
-          })),
-        };
-      } else if (dashboardType === "inline") {
-        // HACK: this is horrible but the easiest way to get "inline" dashboards up and running
-        // pass the dashboard in as dashboardId, and replace the id with [object Object] because
-        // that's what it will be when cast to a string
-        result = expandInlineDashboard(dashId);
-        dashId = result.id = String(dashId);
-      } else {
-        result = await DashboardApi.get(
-          { dashId: dashId },
-          { cancelled: fetchDashboardCancellation.promise },
-        );
+    }) =>
+    async (dispatch, getState) => {
+      if (fetchDashboardCancellation) {
+        fetchDashboardCancellation.resolve();
       }
+      fetchDashboardCancellation = defer();
 
-      fetchDashboardCancellation = null;
+      try {
+        let entities;
+        let result;
 
-      if (dashboardType === "normal" || dashboardType === "transient") {
-        const selectedTabId = getSelectedTabId(getState());
+        const dashboardType = getDashboardType(dashId);
+        const loadedDashboard = getDashboardById(getState(), dashId);
 
-        const cards =
-          selectedTabId === undefined
-            ? result.dashcards
-            : result.dashcards.filter(
-                c => c.dashboard_tab_id === selectedTabId,
+        if (!clearCache && loadedDashboard) {
+          entities = {
+            dashboard: { [dashId]: loadedDashboard },
+            dashcard: Object.fromEntries(
+              loadedDashboard.dashcards.map(id => [
+                id,
+                getDashCardById(getState(), id),
+              ]),
+            ),
+          };
+          result = denormalize(dashId, dashboard, entities);
+        } else if (dashboardType === "public") {
+          result = await PublicApi.dashboard(
+            { uuid: dashId },
+            { cancelled: fetchDashboardCancellation.promise },
+          );
+          result = {
+            ...result,
+            id: dashId,
+            dashcards: result.dashcards.map(dc => ({
+              ...dc,
+              dashboard_id: dashId,
+            })),
+          };
+        } else if (dashboardType === "embed") {
+          result = await EmbedApi.dashboard(
+            { token: dashId },
+            { cancelled: fetchDashboardCancellation.promise },
+          );
+          result = {
+            ...result,
+            id: IS_EMBED_PREVIEW ? result.id : dashId,
+            dashcards: result.dashcards.map(dc => ({
+              ...dc,
+              dashboard_id: dashId,
+            })),
+          };
+        } else if (dashboardType === "transient") {
+          const subPath = dashId.split("/").slice(3).join("/");
+          result = await AutoApi.dashboard(
+            { subPath },
+            { cancelled: fetchDashboardCancellation.promise },
+          );
+          result = {
+            ...result,
+            id: dashId,
+            dashcards: result.dashcards.map(dc => ({
+              ...dc,
+              dashboard_id: dashId,
+            })),
+          };
+        } else if (dashboardType === "inline") {
+          // HACK: this is horrible but the easiest way to get "inline" dashboards up and running
+          // pass the dashboard in as dashboardId, and replace the id with [object Object] because
+          // that's what it will be when cast to a string
+          result = expandInlineDashboard(dashId);
+          dashId = result.id = String(dashId);
+        } else {
+          result = await DashboardApi.get(
+            { dashId: dashId },
+            { cancelled: fetchDashboardCancellation.promise },
+          );
+        }
+
+        fetchDashboardCancellation = null;
+
+        if (dashboardType === "normal" || dashboardType === "transient") {
+          const selectedTabId = getSelectedTabId(getState());
+
+          const cards =
+            selectedTabId === undefined
+              ? result.dashcards
+              : result.dashcards.filter(
+                  c => c.dashboard_tab_id === selectedTabId,
+                );
+
+          await dispatch(loadMetadataForDashboard(cards));
+        }
+
+        const isUsingCachedResults = entities != null;
+        if (!isUsingCachedResults) {
+          // copy over any virtual cards from the dashcard to the underlying card/question
+          result.dashcards.forEach(card => {
+            if (card.visualization_settings.virtual_card) {
+              card.card = Object.assign(
+                card.card || {},
+                card.visualization_settings.virtual_card,
               );
+            }
+          });
+        }
 
-        await dispatch(loadMetadataForDashboard(cards));
+        if (result.param_values) {
+          dispatch(addParamValues(result.param_values));
+        }
+        if (result.param_fields) {
+          dispatch(addFields(result.param_fields));
+        }
+
+        const metadata = getMetadata(getState());
+        const questions = getQuestions(getState());
+        const parameters = getDashboardUiParameters(
+          result.dashcards,
+          result.parameters,
+          metadata,
+          questions,
+        );
+
+        const parameterValuesById = preserveParameters
+          ? getParameterValues(getState())
+          : getParameterValuesByIdFromQueryParams(parameters, queryParams);
+
+        entities = entities ?? normalize(result, dashboard).entities;
+
+        return {
+          entities,
+          dashboard: result,
+          dashboardId: result.id,
+          parameterValues: parameterValuesById,
+          preserveParameters,
+        };
+      } catch (error) {
+        if (!error.isCancelled) {
+          console.error(error);
+        }
+        return error;
       }
-
-      const isUsingCachedResults = entities != null;
-      if (!isUsingCachedResults) {
-        // copy over any virtual cards from the dashcard to the underlying card/question
-        result.dashcards.forEach(card => {
-          if (card.visualization_settings.virtual_card) {
-            card.card = Object.assign(
-              card.card || {},
-              card.visualization_settings.virtual_card,
-            );
-          }
-        });
-      }
-
-      if (result.param_values) {
-        dispatch(addParamValues(result.param_values));
-      }
-      if (result.param_fields) {
-        dispatch(addFields(result.param_fields));
-      }
-
-      const metadata = getMetadata(getState());
-      const questions = getQuestions(getState());
-      const parameters = getDashboardUiParameters(
-        result.dashcards,
-        result.parameters,
-        metadata,
-        questions,
-      );
-
-      const parameterValuesById = preserveParameters
-        ? getParameterValues(getState())
-        : getParameterValuesByIdFromQueryParams(parameters, queryParams);
-
-      entities = entities ?? normalize(result, dashboard).entities;
-
-      return {
-        entities,
-        dashboard: result,
-        dashboardId: result.id,
-        parameterValues: parameterValuesById,
-        preserveParameters,
-      };
-    } catch (error) {
-      if (!error.isCancelled) {
-        console.error(error);
-      }
-      return rejectWithValue(error);
-    }
-  },
+    },
 );
 
 export const fetchCardData = createThunkAction(
