@@ -1,7 +1,9 @@
 /* eslint-disable react/prop-types */
 import cx from "classnames";
+import type { Location } from "history";
 import { assoc } from "icepick";
 import { Component } from "react";
+import type { ConnectedProps } from "react-redux";
 import { connect } from "react-redux";
 import { push } from "react-router-redux";
 import _ from "underscore";
@@ -10,7 +12,15 @@ import LoadingAndErrorWrapper from "metabase/components/LoadingAndErrorWrapper";
 import ColorS from "metabase/css/core/colors.module.css";
 import CS from "metabase/css/core/index.css";
 import DashboardS from "metabase/css/dashboard.module.css";
-import * as dashboardActions from "metabase/dashboard/actions";
+import {
+  initialize,
+  fetchDashboard,
+  fetchDashboardCardData,
+  cancelFetchDashboardCardData,
+  fetchDashboardCardMetadata,
+  setParameterValue,
+  setParameterValueToDefault,
+} from "metabase/dashboard/actions";
 import { getDashboardActions } from "metabase/dashboard/components/DashboardActions";
 import { DashboardGridConnected } from "metabase/dashboard/components/DashboardGrid";
 import { DashboardTabs } from "metabase/dashboard/components/DashboardTabs";
@@ -35,33 +45,69 @@ import {
   setEmbedDashboardEndpoints,
 } from "metabase/services";
 import { PublicMode } from "metabase/visualizations/click-actions/modes/PublicMode";
+import type { Dashboard, DashboardId } from "metabase-types/api";
+import type { State } from "metabase-types/store";
 
 import EmbedFrame from "../../components/EmbedFrame";
 
 import { DashboardContainer } from "./PublicDashboard.styled";
 
-const mapStateToProps = (state, props) => {
+const mapStateToProps = (state: State) => {
   return {
-    metadata: getMetadata(state, props),
-    dashboardId:
-      props.params.dashboardId || props.params.uuid || props.params.token,
-    dashboard: getDashboardComplete(state, props),
-    dashcardData: getCardData(state, props),
-    slowCards: getSlowCards(state, props),
-    parameters: getParameters(state, props),
-    parameterValues: getParameterValues(state, props),
-    draftParameterValues: getDraftParameterValues(state, props),
+    metadata: getMetadata(state),
+    dashboard: getDashboardComplete(state),
+    dashcardData: getCardData(state),
+    slowCards: getSlowCards(state),
+    parameters: getParameters(state),
+    parameterValues: getParameterValues(state),
+    draftParameterValues: getDraftParameterValues(state),
     selectedTabId: getSelectedTabId(state),
   };
 };
 
 const mapDispatchToProps = {
-  ...dashboardActions,
+  initialize,
+  fetchDashboard,
+  fetchDashboardCardData,
+  cancelFetchDashboardCardData,
+  fetchDashboardCardMetadata,
+  setParameterValue,
+  setParameterValueToDefault,
+
   setErrorPage,
   onChangeLocation: push,
 };
 
-class PublicDashboardInner extends Component {
+const connector = connect(mapStateToProps, mapDispatchToProps);
+
+type OwnProps = {
+  params: {
+    dashboardId?: string;
+    uuid?: string;
+    token?: string;
+  };
+  location: Location;
+  isFullscreen: boolean;
+  isNightMode: boolean;
+};
+
+type PublicDashboardProps = OwnProps & ConnectedProps<typeof connector>;
+
+class PublicDashboardInner extends Component<
+  PublicDashboardProps,
+  { dashboardId: DashboardId }
+> {
+  constructor(props: PublicDashboardProps) {
+    super(props);
+    this.state = {
+      dashboardId: String(
+        this.props.params.dashboardId ||
+          this.props.params.uuid ||
+          this.props.params.token,
+      ),
+    };
+  }
+
   _initialize = async () => {
     const {
       initialize,
@@ -90,7 +136,7 @@ class PublicDashboardInner extends Component {
     }
 
     try {
-      if (this.props.dashboard.tabs.length === 0) {
+      if (this.props.dashboard.tabs?.length === 0) {
         await fetchDashboardCardData({ reload: false, clearCache: true });
       }
     } catch (error) {
@@ -107,8 +153,8 @@ class PublicDashboardInner extends Component {
     this.props.cancelFetchDashboardCardData();
   }
 
-  async componentDidUpdate(prevProps) {
-    if (this.props.dashboardId !== prevProps.dashboardId) {
+  async componentDidUpdate(prevProps: PublicDashboardProps, prevState: { dashboardId: DashboardId }) {
+    if (this.state.dashboardId !== prevState.dashboardId) {
       return this._initialize();
     }
 
@@ -183,8 +229,8 @@ class PublicDashboardInner extends Component {
           buttons.length > 0 && <div className={CS.flex}>{buttons}</div>
         }
         dashboardTabs={
-          dashboard?.tabs?.length > 1 && (
-            <DashboardTabs location={this.props.location} />
+          dashboard?.tabs && dashboard.tabs.length > 1 && (
+            <DashboardTabs dashboardId={this.state.dashboardId} location={this.props.location} />
           )
         }
       >
@@ -218,6 +264,6 @@ class PublicDashboardInner extends Component {
 
 export const PublicDashboard = _.compose(
   connect(mapStateToProps, mapDispatchToProps),
-  title(({ dashboard }) => dashboard && dashboard.name),
+  title(({ dashboard }: {dashboard: Dashboard}) => dashboard && dashboard.name),
   DashboardControls,
 )(PublicDashboardInner);
