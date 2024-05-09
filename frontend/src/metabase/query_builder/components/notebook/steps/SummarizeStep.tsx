@@ -2,24 +2,25 @@ import { t } from "ttag";
 
 import { Box, Flex } from "metabase/ui";
 
+import { isLastMetricStage } from "../lib/metrics";
 import type { NotebookStepUiComponentProps } from "../types";
 
 import { AggregateStep } from "./AggregateStep";
 import BreakoutStep from "./BreakoutStep";
 
 function SummarizeStep({
+  step,
   color,
   isLastOpened,
-  step,
   ...props
 }: NotebookStepUiComponentProps) {
-  const isMetric = step.question.type() === "metric";
+  const isMetricCalculation = isLastMetricStage(step);
 
   return (
     <Flex
       align="center"
       direction={{ base: "column", md: "row" }}
-      gap={isMetric ? "md" : "sm"}
+      gap={isMetricCalculation ? "md" : "sm"}
     >
       <Box w={{ base: "100%", md: "50%" }}>
         <AggregateStep
@@ -29,7 +30,7 @@ function SummarizeStep({
           {...props}
         />
       </Box>
-      {!isMetric && <Box c={color} fw="bold">{t`by`}</Box>}
+      {!isMetricCalculation && <Box c={color} fw="bold">{t`by`}</Box>}
       <Box w={{ base: "100%", md: "50%" }}>
         <BreakoutStep
           step={step}

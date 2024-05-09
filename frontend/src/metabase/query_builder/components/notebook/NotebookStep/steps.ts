@@ -3,8 +3,8 @@ import { t } from "ttag";
 
 import { color } from "metabase/lib/colors";
 import type { IconName } from "metabase/ui";
-import type { CardType } from "metabase-types/api";
 
+import { isLastMetricStage } from "../lib/metrics";
 import { AggregateStep } from "../steps/AggregateStep";
 import BreakoutStep from "../steps/BreakoutStep";
 import { DataStep } from "../steps/DataStep";
@@ -14,10 +14,10 @@ import { JoinStep } from "../steps/JoinStep";
 import { LimitStep } from "../steps/LimitStep";
 import SortStep from "../steps/SortStep";
 import SummarizeStep from "../steps/SummarizeStep";
-import type { NotebookStepUiComponentProps } from "../types";
+import type { NotebookStep, NotebookStepUiComponentProps } from "../types";
 
 export type StepUIItem = {
-  getTitle: (type: CardType) => string;
+  getTitle: (step: NotebookStep, type: StepTitleType) => string;
   icon?: IconName;
   priority?: number;
   transparent?: boolean;
@@ -25,6 +25,8 @@ export type StepUIItem = {
   color: string;
   component: React.ComponentType<NotebookStepUiComponentProps>;
 };
+
+type StepTitleType = "step" | "action";
 
 export const STEP_UI: Record<string, StepUIItem> = {
   data: {
@@ -47,15 +49,17 @@ export const STEP_UI: Record<string, StepUIItem> = {
     color: color("bg-dark"),
   },
   filter: {
-    getTitle: type => (type === "metric" ? t`Filter (optional)` : t`Filter`),
+    getTitle: () => t`Filter`,
     icon: "filter",
     component: FilterStep,
     priority: 10,
     color: color("filter"),
   },
   summarize: {
-    getTitle: type =>
-      type === "metric" ? t`Measure calculation` : t`Summarize`,
+    getTitle: (step, type) =>
+      type === "step" && isLastMetricStage(step)
+        ? t`Measure calculation`
+        : t`Summarize`,
     icon: "sum",
     component: SummarizeStep,
     priority: 5,
