@@ -9,7 +9,10 @@ import { isActionCard } from "metabase/actions/utils";
 import CS from "metabase/css/core/index.css";
 import DashboardS from "metabase/css/dashboard.module.css";
 import { DASHBOARD_SLOW_TIMEOUT } from "metabase/dashboard/constants";
-import { getDashcardData } from "metabase/dashboard/selectors";
+import {
+  getDashcardData,
+  getIsMetadataLoaded,
+} from "metabase/dashboard/selectors";
 import {
   getDashcardResultsError,
   isDashcardLoading,
@@ -111,6 +114,7 @@ function DashCardInner({
   const dashcardData = useSelector(state =>
     getDashcardData(state, dashcard.id),
   );
+  const isMetadataLoaded = useSelector(getIsMetadataLoaded);
   const [isPreviewingCard, setIsPreviewingCard] = useState(false);
   const cardRootRef = useRef<HTMLDivElement>(null);
 
@@ -287,6 +291,7 @@ function DashCardInner({
           CS.flexColumn,
           CS.hoverParent,
           CS.hoverVisibility,
+          { [CS.pointerEventsNone]: !isMetadataLoaded },
         )}
         hasHiddenBackground={hasHiddenBackground}
         shouldForceHiddenBackground={shouldForceHiddenBackground}
