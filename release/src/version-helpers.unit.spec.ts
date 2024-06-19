@@ -210,7 +210,13 @@ describe("version-helpers", () => {
     });
 
     it("should throw an error for invalid release branches", () => {
-      const cases = ["foo", "release-x.75", "release-x.75.0", "release-x.75.x-test", "refs/heads/release-x"];
+      const cases = [
+        "foo",
+        "release-x.75",
+        "release-x.75.0",
+        "release-x.75.x-test",
+        "refs/heads/release-x",
+      ];
       cases.forEach(input => {
         expect(() => getVersionFromReleaseBranch(input)).toThrow();
       });

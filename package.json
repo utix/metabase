@@ -364,15 +364,15 @@
     "lint": "yarn lint-eslint && yarn lint-prettier && yarn lint-docs-links && yarn lint-yaml && yarn type-check",
     "lint-docs-links": "yarn && ./bin/verify-doc-links",
     "lint-eslint": "yarn build:cljs && yarn lint-eslint-pure",
-    "lint-eslint-pure": "eslint --ext .js,.jsx,.ts,.tsx --rulesdir frontend/lint/eslint-rules --max-warnings 0 --report-unused-disable-directives enterprise/frontend frontend e2e",
+    "lint-eslint-pure": "eslint --ext .js,.jsx,.ts,.tsx --rulesdir frontend/lint/eslint-rules --max-warnings 0 --report-unused-disable-directives enterprise/frontend frontend e2e release",
     "lint-prettier": "yarn && yarn lint-prettier-pure",
-    "lint-prettier-pure": "prettier --check '{frontend,enterprise/frontend,e2e}/**/*.{js,jsx,ts,tsx,css}'",
+    "lint-prettier-pure": "prettier --check '{frontend,enterprise/frontend,e2e,release}/**/*.{js,jsx,ts,tsx,css}'",
     "lint-yaml": "yamllint **/*.{yaml,yml} --ignore=node_modules/**/*.{yaml,yml}",
     "postinstall": "patch-package",
     "precommit": "lint-staged --shell",
     "preinstall": "echo $npm_execpath | grep -q yarn || echo '\\033[0;33mSorry, npm is not supported. Please use Yarn (https://yarnpkg.com/).\\033[0m'",
     "prepare": "husky install",
-    "prettier": "prettier --write '{frontend,enterprise/frontend,e2e}/**/*.{js,jsx,ts,tsx,css}'",
+    "prettier": "prettier --write '{frontend,enterprise/frontend,e2e,release}/**/*.{js,jsx,ts,tsx,css}'",
     "remove-webpack-cache": "rm -rf ./node_modules/.cache",
     "storybook": "yarn build:cljs && start-storybook -p 6006",
     "test": "yarn test-unit && yarn test-timezones && yarn test-cypress",
@@ -406,7 +406,7 @@
       "stylelint --fix",
       "prettier --write"
     ],
-    "+(frontend|enterprise/frontend)/**/*.{js,jsx,ts,tsx}": [
+    "+(frontend|enterprise/frontend|release)/**/*.{js,jsx,ts,tsx}": [
       "LINT_CSS_MODULES=true eslint --rulesdir frontend/lint/eslint-rules --max-warnings 0 --fix",
       "prettier --write",
       "node ./bin/verify-doc-links"

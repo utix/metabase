@@ -6,7 +6,6 @@ import {
   isValidVersionString,
 } from "./version-helpers";
 
-
 const releaseTemplate = `**Upgrading**
 
 You can download a .jar of the release, or get the latest on Docker. Make sure to back up your Metabase
@@ -39,11 +38,11 @@ SHA-256 checksum for the {{version}} JAR:
 `;
 
 const isBugIssue = (issue: Issue) => {
-  if (typeof issue.labels === 'string') {
+  if (typeof issue.labels === "string") {
     return issue.labels.includes("Type:Bug");
   }
   return issue.labels.some(tag => tag.name === "Type:Bug");
-}
+};
 
 const formatIssue = (issue: Issue) => `- ${issue.title} (#${issue.number})`;
 
@@ -106,9 +105,11 @@ export async function publishRelease({
 
   const issues = await getMilestoneIssues({ version, github, owner, repo });
 
-  const isLatest: 'true' | 'false' = !isEnterpriseVersion(version) && await isLatestRelease({ version, github, owner, repo })
-    ? 'true'
-    : 'false';
+  const isLatest: "true" | "false" =
+    !isEnterpriseVersion(version) &&
+    (await isLatestRelease({ version, github, owner, repo }))
+      ? "true"
+      : "false";
 
   const payload = {
     owner,

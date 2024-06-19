@@ -40,6 +40,6 @@ export type Issue = {
   title: string;
   html_url: string;
   labels: string | { name?: string }[];
-  assignee: null |  { login: string };
+  assignee: null | { login: string };
   created_at: string;
 };

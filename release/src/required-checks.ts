@@ -15,13 +15,18 @@ const config = {
 const targetBranch = process.argv[2];
 
 if (!config.owner || !config.repo) {
-  console.error(chalk.red("You must set GITHUB_OWNER and GITHUB_REPO in your environment"));
+  console.error(
+    chalk.red("You must set GITHUB_OWNER and GITHUB_REPO in your environment"),
+  );
   process.exit(1);
 }
 
 if (!targetBranch) {
   console.error(chalk.red("You must provide a target branch name"));
-  console.log("Usage: ", chalk.blue("yarn copy-required-checks <branch-to-copy-to>"));
+  console.log(
+    "Usage: ",
+    chalk.blue("yarn copy-required-checks <branch-to-copy-to>"),
+  );
   process.exit(1);
 }
 
@@ -30,7 +35,10 @@ function filterChecks(checks: string[]) {
   return checks.filter(check => !checksToExclude.includes(check));
 }
 
-async function setRequiredChecks(branchName: string, masterCheckList: string[]) {
+async function setRequiredChecks(
+  branchName: string,
+  masterCheckList: string[],
+) {
   await github.rest.repos.updateBranchProtection({
     ...config,
     branch: branchName,
@@ -43,14 +51,19 @@ async function setRequiredChecks(branchName: string, masterCheckList: string[]) 
     enforce_admins: true,
   });
 
-  console.log(chalk.green(`✅ ${masterCheckList.length} required checks copied to ${branchName}`));
+  console.log(
+    chalk.green(
+      `✅ ${masterCheckList.length} required checks copied to ${branchName}`,
+    ),
+  );
 }
 
 async function getRequiredChecksFromMaster() {
-  const { data: masterCheckList } = await github.rest.repos.getAllStatusCheckContexts({
-    ...config,
-    branch: "master",
-  });
+  const { data: masterCheckList } =
+    await github.rest.repos.getAllStatusCheckContexts({
+      ...config,
+      branch: "master",
+    });
 
   const filteredCheckList = filterChecks(masterCheckList);
 

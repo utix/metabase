@@ -93,7 +93,7 @@ export const getVersionFromReleaseBranch = (branch: string) => {
   }
   const majorVersion = match[1];
   return `v0.${majorVersion}.0`;
-}
+};
 
 export const isLatestVersion = (thisVersion: string, allVersions: string[]) => {
   if (isRCVersion(thisVersion)) {
