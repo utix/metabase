@@ -245,6 +245,8 @@ const config = (module.exports = {
           name: "html2canvas",
         },
       },
+      maxAsyncRequests: 30,
+      maxSize: 1024000,
     },
     minimizer: [
       new TerserPlugin({
