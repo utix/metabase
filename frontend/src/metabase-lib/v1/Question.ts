@@ -780,6 +780,7 @@ class Question {
       this.datasetQuery()?.database,
       this.metadataProvider(),
       this.datasetQuery(),
+      this.getResultMetadata(),
     );
 
     // Helpers for working with the current query from CLJS REPLs.

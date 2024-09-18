@@ -23,8 +23,9 @@ export function fromLegacyQuery(
   databaseId: DatabaseId | null,
   metadataProvider: MetadataProvider,
   datasetQuery: DatasetQuery,
+  resultMetadata?: any,
 ): Query {
-  return ML.query(databaseId, metadataProvider, datasetQuery);
+  return ML.query(databaseId, metadataProvider, datasetQuery, resultMetadata);
 }
 
 /**

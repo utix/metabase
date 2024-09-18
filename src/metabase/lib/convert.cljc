@@ -171,7 +171,7 @@
           joins)))
 
 (let [card-id* (atom 0)]
-  (defn- card-id!
+  (defn card-id!
     "sequence of negative id numbers to serve as a card id for the native stages"
     []
     (swap! card-id* dec)))

@@ -10,6 +10,7 @@
    [metabase.lib.hierarchy :as lib.hierarchy]
    [metabase.lib.metadata :as lib.metadata]
    [metabase.lib.metadata.calculation :as lib.metadata.calculation]
+   [metabase.lib.metadata.source-native :as lib.metadata.source-native]
    [metabase.lib.normalize :as lib.normalize]
    [metabase.lib.options :as lib.options]
    [metabase.lib.schema :as lib.schema]
@@ -281,13 +282,31 @@
   [metadata-providerable native-stage]
   (query-with-stages metadata-providerable [native-stage]))
 
+(defn- native->source-native
+  [{:keys [database stages] :as a-query} base-columns]
+  (-> a-query
+      (update-in [:stages 0] (fn [stage]
+                               (-> stage
+                                   (dissoc :native :template-tags)
+                                   (assoc :lib/type :mbql.stage/mbql
+                                          :source-card (lib.convert/card-id!)))))
+      (update :lib/metadata lib.metadata.source-native/source-native-metadata-provider database (get-in stages [0 :native]) base-columns)))
+
 (mu/defn query :- ::lib.schema/query
   "Create a new MBQL query from anything that could conceptually be an MBQL query, like a Database or Table or an
   existing MBQL query or saved question or whatever. If the thing in question does not already include metadata, pass
   it in separately -- metadata is needed for most query manipulation operations."
-  [metadata-providerable :- ::lib.schema.metadata/metadata-providerable
+  ([metadata-providerable :- ::lib.schema.metadata/metadata-providerable
    x]
-  (lib.cache/attach-query-cache (query-method metadata-providerable x)))
+   (lib.cache/attach-query-cache (query-method metadata-providerable x)))
+
+  ([metadata-providerable :- ::lib.schema.metadata/metadata-providerable
+    result-metadata
+    x]
+   (let [base-query (query-method metadata-providerable x)]
+     (lib.cache/attach-query-cache
+      (cond-> base-query
+        (and result-metadata (native? base-query)) (native->source-native result-metadata))))))
 
 (mu/defn query-from-legacy-inner-query :- ::lib.schema/query
   "Create a pMBQL query from a legacy inner query."

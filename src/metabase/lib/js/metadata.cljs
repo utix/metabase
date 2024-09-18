@@ -66,7 +66,7 @@
 
 ;;; yes, the multimethod could dispatch on object-type AND k and get called for every object, but that would be slow,
 ;;; by doing it this way we only need to do it once.
-(defmulti ^:private parse-field-fn
+(defmulti parse-field-fn
   "Return a function with the signature
 
     (f k v) => v'

@@ -175,18 +175,29 @@
    (lib.core/query metadata-provider table-or-card-metadata))
 
   ([database-id metadata-provider query-map]
-   ;; Since the query-map is possibly `Object.freeze`'d, we can't mutate it to attach the query.
-   ;; Therefore, we attach a two-level cache to the metadata-provider:
-   ;; The outer key is the database-id; the inner one i a weak ref to the legacy query-map (a JS object).
-   ;; This should achieve efficient caching of legacy queries without retaining garbage.
-   ;; (Except possibly for a few empty WeakMaps, if queries are cached and then GC'd.)
-   ;; If the metadata changes, the metadata-provider is replaced, so all these caches are destroyed.
-   (lib.cache/side-channel-cache-weak-refs
-    (str database-id) metadata-provider query-map
-    #(->> %
-          lib.convert/js-legacy-query->pMBQL
-          (lib.core/query metadata-provider))
-    {:force? true})))
+   (query database-id metadata-provider query-map nil))
+
+  ([database-id metadata-provider query-map result-columns]
+   (let [parse (metabase.lib.js.metadata/parse-field-fn :field)
+         clj-result-columns (mapv (fn [c]
+                                    (into {}
+                                          (map (fn [[k v]]
+                                                 (let [k (keyword (u/->kebab-case-en k))]
+                                                   [k (parse k v)])))
+                                          (js->clj c)))
+                                  result-columns)]
+     ;; Since the query-map is possibly `Object.freeze`'d, we can't mutate it to attach the query.
+     ;; Therefore, we attach a two-level cache to the metadata-provider:
+     ;; The outer key is the database-id; the inner one i a weak ref to the legacy query-map (a JS object).
+     ;; This should achieve efficient caching of legacy queries without retaining garbage.
+     ;; (Except possibly for a few empty WeakMaps, if queries are cached and then GC'd.)
+     ;; If the metadata changes, the metadata-provider is replaced, so all these caches are destroyed.
+     (lib.cache/side-channel-cache-weak-refs
+      (str database-id) metadata-provider query-map
+      #(->> %
+            lib.convert/js-legacy-query->pMBQL
+            (lib.core/query metadata-provider clj-result-columns))
+      {:force? true}))))
 
 ;; TODO: Lots of utilities and helpers in this file. It would be easier to consume the API if the helpers were moved to
 ;; a utility namespace. Better would be to "upstream" them into `metabase.util.*` if they're useful elsewhere.
