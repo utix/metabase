@@ -173,6 +173,20 @@ const STEPS: NotebookStepDef[] = [
     },
     canRevert: () => true,
   },
+  {
+    type: "native",
+    clauseType: "native",
+    valid: query => {
+      return hasData(query);
+    },
+    active: (query, stageIndex) => {
+      return Boolean(Lib.rawNativeQuery(query, stageIndex));
+    },
+    revert: (query, _stageIndex) => {
+      return query;
+    },
+    canRevert: () => true,
+  },
 ];
 
 const hasData = (query: Lib.Query): boolean => {

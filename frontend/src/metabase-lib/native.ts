@@ -11,11 +11,15 @@ export function nativeQuery(
   return ML.native_query(databaseId, metadata, innerQuery);
 }
 
-export function rawNativeQuery(query: Query): string {
+export function rawNativeQuery(query: Query, _stageIndex: number): string {
   return ML.raw_native_query(query);
 }
 
-export function withNativeQuery(query: Query, innerQuery: string): Query {
+export function withNativeQuery(
+  query: Query,
+  _stageIndex: number,
+  innerQuery: string,
+): Query {
   return ML.with_native_query(query, innerQuery);
 }
 
