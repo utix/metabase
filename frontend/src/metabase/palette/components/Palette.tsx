@@ -1,6 +1,8 @@
+import cx from "classnames";
 import { KBarPortal, VisualState, useKBar } from "kbar";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { withRouter } from "react-router";
+import { useMount } from "react-use";
 import { t } from "ttag";
 import _ from "underscore";
 
@@ -12,6 +14,7 @@ import { Box, Card, Center, Overlay } from "metabase/ui";
 
 import { useCommandPaletteBasicActions } from "../hooks/useCommandPaletteBasicActions";
 
+import Styles from "./Palette.module.css";
 import { PaletteInput } from "./Palette.styled";
 import { PaletteFooter } from "./PaletteFooter";
 import { PaletteResults } from "./PaletteResults";
@@ -42,9 +45,15 @@ const PaletteContainer = () => {
   useOnClickOutside(ref, () => {
     query.setVisualState(VisualState.hidden);
   });
+  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  useMount(() => {
+    setIsOverlayVisible(true);
+  });
 
   return (
-    <Overlay opacity={0.5}>
+    <Overlay
+      className={cx(Styles.Overlay, { [Styles.Visible]: isOverlayVisible })}
+    >
       <Center>
         <Card
           ref={ref}
