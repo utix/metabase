@@ -52,6 +52,8 @@ export const MetabaseProviderInternal = ({
   store,
   className,
 }: InternalMetabaseProviderProps): JSX.Element => {
+  console.log("Build with rollup !");
+
   const { fontFamily } = theme ?? {};
   useInitData({ config });
 

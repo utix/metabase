@@ -116,3 +116,6 @@ modules/drivers/*/.lsp/*
 
 # swc
 .swc/
+
+sdk-build
+!(sdk-build/package.json)

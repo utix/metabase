@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "build",
+    // "outDir": "build",
     "paths": {
       "*": [
         "./frontend/src/*",
@@ -9,7 +9,9 @@
         "./enterprise/frontend/src/*",
         "./enterprise/frontend/test/*"
       ],
-      "cljs/*": ["./target/cljs_dev/*"]
+      "cljs/*": [
+        "./target/cljs_dev/*"
+      ]
     }
   },
   "include": [

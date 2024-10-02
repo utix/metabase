@@ -1,4 +1,4 @@
-import passwordGenerator from "password-generator";
+// import passwordGenerator from "password-generator";
 
 import MetabaseSettings from "metabase/lib/settings";
 
@@ -14,7 +14,7 @@ export const generatePassword = complexity => {
   let password = "";
   let tries = 0;
   while (!isStrongEnough(password) && tries < 100) {
-    password = passwordGenerator(len, false, /[\w\d\?\-]/);
+    // password = passwordGenerator(len, false, /[\w\d\?\-]/);
     tries++;
   }
   return password;

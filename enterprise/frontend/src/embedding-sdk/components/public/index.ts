@@ -1,4 +1,4 @@
-export { StaticQuestion } from "./StaticQuestion";
+export { StaticQuestion } from "/Users/npretto/metabase/metabase/enterprise/frontend/src/embedding-sdk/components/public/StaticQuestion/StaticQuestion.tsx";
 export { InteractiveQuestion } from "./InteractiveQuestion";
 export { MetabaseProvider } from "./MetabaseProvider";
 export { StaticDashboard } from "./StaticDashboard";

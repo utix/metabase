@@ -2,6 +2,7 @@
 import { bindActionCreators } from "@reduxjs/toolkit";
 import { Component } from "react";
 import { connect } from "react-redux";
+import * as entities from "metabase/entities";
 
 /**
  * @deprecated HOCs are deprecated
@@ -10,7 +11,7 @@ export default () => ComposedComponent => {
   const mapStateToProps = (state, props) => ({
     entityDef:
       // dynamic require due to dependency load order issues
-      require("metabase/entities")[
+      entities[
         typeof props.entityType === "function"
           ? props.entityType(state, props)
           : props.entityType
