@@ -9494,11 +9494,15 @@ databaseChangeLog:
         - onFail: MARK_RAN
         - not:
           - tableExists:
-              tableName: user_key_value
+              tableName: dismissed_modal
       changes:
         - createTable:
-            tableName: user_key_value
-            remarks: A simple key value store for each user.
+            tableName: dismissed_modal
+            remarks: >
+              A simple table to store dismissed modals for the user. Keyed by user_id and `key`. The idea is that the
+              frontend can say things like 'this user has dismissed `collection-cleanup-modal-123`', where
+              `collection-cleanup-modal-123` is an opaque-to-the-backend key that's defined solely by the frontend.
+              The only possible values are present (therefore `true`) or not present (equivalent to `false`).
             columns:
               - column:
                   name: id
@@ -9515,7 +9519,7 @@ databaseChangeLog:
                     nullable: false
                     referencedTableName: core_user
                     referencedColumnNames: id
-                    foreignKeyName: fk_user_key_value_user_id
+                    foreignKeyName: fk_dismissed_modal_user_id
               - column:
                   name: key
                   remarks: 'The key'
@@ -9523,26 +9527,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: value
-                  remarks: 'The value'
-                  type: varchar(254)
-                  constraints:
-                    nullable: true
-              - column:
                   name: created_at
                   remarks: 'When this row was created'
                   type: ${timestamp_type}
                   defaultValueComputed: current_timestamp
                   constraints:
                     nullable: false
-              - column:
-                  name: updated_at
-                  remarks: 'When this row was last updated'
-                  type: ${timestamp_type}
-                  defaultValueComputed: current_timestamp
-                  constraints:
-                    nullable: false
-
 
   - changeSet:
       id: v51.2024-10-08T10:46:36
@@ -9550,9 +9540,9 @@ databaseChangeLog:
       comment: Add a unique constraint for user_id,key
       changes:
         - addUniqueConstraint:
-            tableName: user_key_value
+            tableName: dismissed_modal
             columnNames: user_id, key
-            constraintName: unique_user_key_value_user_id_key
+            constraintName: unique_dismissed_modal_user_id_key
       rollback: # will be deleted with table
 
   # >>>>>>>>>> DO NOT ADD NEW MIGRATIONS BELOW THIS LINE! ADD THEM ABOVE <<<<<<<<<<
