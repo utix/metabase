@@ -50,6 +50,7 @@
    "ConnectionImpersonation"
    "DashboardBookmark"
    "DataPermissions"
+   "DismissedModal"
    "FieldUsage"
    "GroupTableAccessPolicy"
    "HTTPAction"

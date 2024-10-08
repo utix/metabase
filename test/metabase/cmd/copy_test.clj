@@ -30,6 +30,7 @@
     :model/CardFavorite
     :model/CloudMigration
     :model/DashboardFavorite
+    :model/DismissedModal
     :model/FieldUsage
     :model/LegacyMetric
     :model/LegacyMetricImportantField

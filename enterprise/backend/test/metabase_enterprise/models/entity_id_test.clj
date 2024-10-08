@@ -48,6 +48,7 @@
     :model/DataPermissions
     :model/CollectionPermissionGraphRevision
     :model/DashboardCardSeries
+    :model/DismissedModal
     :model/LoginHistory
     :model/FieldUsage
     :model/FieldValues
