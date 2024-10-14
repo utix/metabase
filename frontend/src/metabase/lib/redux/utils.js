@@ -14,8 +14,8 @@ import {
 } from "metabase/redux/requests";
 
 // convenience
-export { combineReducers, compose } from "@reduxjs/toolkit";
-export { handleActions, createAction } from "redux-actions";
+export { combineReducers, compose, createAction } from "@reduxjs/toolkit";
+export { handleActions } from "redux-actions";
 
 // turns string timestamps into moment objects
 export function momentifyTimestamps(
