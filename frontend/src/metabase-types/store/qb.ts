@@ -1,6 +1,8 @@
+import type { QueryModalType } from "metabase/query_builder/constants";
 import type {
   Card,
   DashboardId,
+  Database,
   Dataset,
   Field,
   ParameterValueOrArray,
@@ -26,16 +28,22 @@ export interface QueryBuilderUIControls {
   isShowingChartTypeSidebar: boolean;
   isShowingChartSettingsSidebar: boolean;
   isShowingQuestionDetailsSidebar: boolean;
+  isShowingQuestionInfoSidebar: boolean;
   isShowingTimelineSidebar: boolean;
   isNativeEditorOpen: boolean;
   initialChartSetting: null;
   isShowingRawTable: boolean;
-  queryBuilderMode: QueryBuilderMode;
+  queryBuilderMode: QueryBuilderMode | false;
   previousQueryBuilderMode: boolean;
   snippetCollectionId: number | null;
   datasetEditorTab: DatasetEditorTab;
   isShowingNotebookNativePreview: boolean;
   notebookNativePreviewSidebarWidth: number | null;
+  scrollToLastColumn?: boolean;
+  modal: QueryModalType | null;
+  dataReferenceStack: { type: "database"; item: Database }[] | null;
+  initialChartSettings: { section: string };
+  showSidebarTitle: boolean;
 }
 
 export interface QueryBuilderLoadingControls {

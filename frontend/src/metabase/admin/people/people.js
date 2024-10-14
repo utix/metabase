@@ -40,9 +40,11 @@ export const createMembership = createAction(
     });
 
     return {
-      user_id: userId,
-      group_id: groupId,
-      membership: _.findWhere(groupMemberships, { user_id: userId }),
+      payload: {
+        user_id: userId,
+        group_id: groupId,
+        membership: _.findWhere(groupMemberships, { user_id: userId }),
+      },
     };
   },
 );
@@ -65,7 +67,7 @@ export const updateMembership = createAction(
       id: membership.membership_id,
     });
 
-    return membership;
+    return { payload: membership };
   },
 );
 

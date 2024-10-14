@@ -14,7 +14,6 @@ import {
 } from "metabase/redux/requests";
 
 // convenience
-export { combineReducers, compose, createAction } from "@reduxjs/toolkit";
 export { handleActions } from "redux-actions";
 
 // turns string timestamps into moment objects
@@ -213,6 +212,7 @@ export function withAction(actionType) {
         return { type: actionType, payload: payloadOrThunk };
       }
     }
+
     newCreator.toString = () => actionType;
     return newCreator;
   };

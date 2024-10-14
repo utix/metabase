@@ -1,6 +1,8 @@
+import { createReducer } from "@reduxjs/toolkit";
+
 import {
   combineReducers,
-  createAction,
+  createAsyncThunk,
   createThunkAction,
   handleActions,
 } from "metabase/lib/redux";
@@ -24,14 +26,16 @@ export const reloadSettings = () => async (dispatch, getState) => {
 };
 
 const REFRESH_SETTINGS_LIST = "metabase/admin/settings/REFRESH_SETTINGS_LIST";
-export const refreshSettingsList = createAction(
+export const refreshSettingsList = createAsyncThunk(
   REFRESH_SETTINGS_LIST,
   async () => {
     const settingsList = await SettingsApi.list();
-    return settingsList.map(setting => ({
-      ...setting,
-      originalValue: setting.value,
-    }));
+    return {
+      payload: (settingsList ?? []).map(setting => ({
+        ...setting,
+        originalValue: setting.value,
+      })),
+    };
   },
 );
 
@@ -187,12 +191,12 @@ export const warnings = handleActions(
   {},
 );
 
-const settings = handleActions(
-  {
-    [REFRESH_SETTINGS_LIST]: { next: (state, { payload }) => payload },
-  },
-  [],
-);
+const settings = createReducer([], builder => {
+  builder.addCase(
+    refreshSettingsList.fulfilled,
+    (_state, { payload }) => payload,
+  );
+});
 
 export default combineReducers({
   settings,
