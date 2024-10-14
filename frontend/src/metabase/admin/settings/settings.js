@@ -30,12 +30,10 @@ export const refreshSettingsList = createAsyncThunk(
   REFRESH_SETTINGS_LIST,
   async () => {
     const settingsList = await SettingsApi.list();
-    return {
-      payload: (settingsList ?? []).map(setting => ({
-        ...setting,
-        originalValue: setting.value,
-      })),
-    };
+    return settingsList.map(setting => ({
+      ...setting,
+      originalValue: setting.value,
+    }));
   },
 );
 

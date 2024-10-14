@@ -8,7 +8,7 @@ import type {
   Dispatch,
   GetState,
   QueryBuilderMode,
-  type QueryBuilderUIControls,
+  QueryBuilderUIControls,
 } from "metabase-types/store";
 
 import { updateUrl } from "./navigation";

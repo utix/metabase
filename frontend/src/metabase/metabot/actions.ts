@@ -13,7 +13,7 @@ import type {
   GetState,
   MetabotEntityId,
   MetabotEntityType,
-  type MetabotUiControls,
+  MetabotUiControls,
   State,
 } from "metabase-types/store";
 
