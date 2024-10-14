@@ -11,10 +11,7 @@ import { runQuestionQuery } from "metabase/query_builder/actions";
 import { CardApi, MetabaseApi } from "metabase/services";
 import type { CardId, CollectionId, TableId } from "metabase-types/api";
 import type { Dispatch, State } from "metabase-types/store";
-import type {
-  type FileUpload,
-  FileUploadState,
-} from "metabase-types/store/upload";
+import type { FileUpload, FileUploadState } from "metabase-types/store/upload";
 import { UploadMode } from "metabase-types/store/upload";
 
 export const UPLOAD_DATA_FILE_TYPES = [".csv", ".tsv"];

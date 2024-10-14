@@ -162,7 +162,7 @@ export const markCardAsSlow = createAction(MARK_CARD_AS_SLOW, (card: Card) => {
   };
 });
 
-export type FetchCardDataActionArgs = {
+type FetchCardDataActionArgs = {
   card: Card;
   dashcard: DashboardCard;
   options: {
