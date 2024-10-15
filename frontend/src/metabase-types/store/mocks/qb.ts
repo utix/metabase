@@ -27,6 +27,11 @@ export const createMockQueryBuilderUIControlsState = (
   previousQueryBuilderMode: false,
   queryBuilderMode: "view",
   snippetCollectionId: null,
+  isShowingQuestionInfoSidebar: false,
+  modal: null,
+  dataReferenceStack: null,
+  initialChartSettings: undefined,
+  showSidebarTitle: false,
   ...opts,
 });
 

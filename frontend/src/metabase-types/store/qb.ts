@@ -54,7 +54,7 @@ export interface QueryBuilderUIControls {
   scrollToLastColumn?: boolean;
   modal: QueryModalType | null;
   dataReferenceStack: DataReferenceStack | null;
-  initialChartSettings: { section: string };
+  initialChartSettings?: { section: string };
   showSidebarTitle: boolean;
 }
 
