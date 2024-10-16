@@ -14,7 +14,7 @@
 
 (def statuses
   "Schema enum of the acceptable values for the `status` column"
-  #{"verified" "flagged" nil})
+  #{"verified" "flagged" "expired" nil})
 
 (def Statuses
   "Schema of valid statuses"
