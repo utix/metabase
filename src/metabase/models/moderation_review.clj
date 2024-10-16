@@ -37,7 +37,6 @@
      [:moderated_item_type {:optional true} moderation/moderated-item-types]
      [:status              {:optional true} Statuses]
      [:text                {:optional true} [:maybe :string]]
-
      [:reason              {:optional true} Reasons]
      [:valid_until         {:optional true} :any]]))
 
@@ -98,9 +97,7 @@
                 {:most_recent false})
     (first (t2/insert-returning-instances! ModerationReview (assoc params :most_recent true)))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; NOTE:
-
 
 (def verifiable-models
   ;; - Verified means that a `user` confirms the content adheres to business definitions and is actively maintained.
@@ -174,24 +171,11 @@
                                        (conj seen [m id]))))))))
 
 (comment
-  (upstream* :model/Database 1)
-  ;; => []
-
-  (upstream* :model/Table 5)
-  ;; => [[:model/Database 1]]
-
-  (upstream* :model/Card 1)
-  ;; => [[:model/Table 5]]
-
-  (upstream* :model/Dashboard 10)
-  ;; => [[:model/Card 10]]
+  (upstream* :model/Database 1) ;; => []
+  (upstream* :model/Table 5) ;; => [[:model/Database 1]]
+  (upstream* :model/Card 1) ;; => [[:model/Table 5]]
+  (upstream* :model/Dashboard 10) ;; => [[:model/Card 108] [:model/Card 109] [:model/Card 110]]
 
   (upstream :model/Dashboard 10)
-
-;; => ([:model/Dashboard 10] [:model/Card 10] [:model/Table 5] [:model/Database 1])
-
-  ;; TODO: downstream
-
-  (map
-   (fn [[m id]] (upstream* m id))
-   (upstream* :model/Dashboard 10)))
+  ;; => #{[:model/Database 1] [:model/Card 110] [:model/Card 109] [:model/Card 108] [:model/Table 6]}
+  )
