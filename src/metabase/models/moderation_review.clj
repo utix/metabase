@@ -9,8 +9,7 @@
    [metabase.util.malli :as mu]
    [metabase.util.malli.schema :as ms]
    [methodical.core :as methodical]
-   [toucan2.core :as t2])
-  (:import [java.time LocalDateTime]))
+   [toucan2.core :as t2]))
 
 (def statuses
   "Schema enum of the acceptable values for the `status` column"
@@ -91,7 +90,7 @@
               [:status               {:optional true} Statuses]
               [:text                 {:optional true} [:maybe :string]]
               [:reason       {:optional true} [:enum :no-updates :other]]
-              [:valid-until  {:optional true} :any]]]
+              [:valid_until  {:optional true} :any]]]
   (t2/with-transaction [_conn]
     (delete-extra-reviews! (:moderated_item_id params) (:moderated_item_type params))
     (t2/update! ModerationReview {:moderated_item_id   (:moderated_item_id params)
@@ -113,12 +112,9 @@
   ;; - Is set manually and can have an expiration date.
   #{:dashboard
     :card
-    :model ;; card with type = :model
-    })
-
+    :model}) ;; card with type = :model
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (def healthyness-models
   ;; - Healthy means the data is good and passing automated data tests. Unhealthy means something is wrong (and tells
@@ -133,8 +129,7 @@
   #{:database
     :schema
     :table
-    :model ;; card with type = :model
-    })
+    :model}) ;; card with type = :model
 
 
 ;; to keep track of the most recent statuses
@@ -154,6 +149,7 @@
     :model/Database []
     :model/Table (mapv (fn [db-id] [:model/Database db-id])
                        (distinct (map :db_id (t2/select [:model/Table :db_id] id))))
+    ;; TODO: needs to follow parent cards as well, now it just grabs the table
     :model/Card (mapv (fn [db-id] [:model/Table db-id])
                       (distinct (map :table_id (t2/select [:model/Card :table_id] id))))
     :model/Dashboard (mapv
@@ -164,6 +160,18 @@
                                       :join   [[:report_card :card] [:= :dashcard.card_id :card.id]]
                                       :where [:= :dashcard.dashboard_id 10]})))))
 
+(defn upstream
+  "Finds upstream models, used to flow health warnings forward through the entity system"
+  ([model-type id] (upstream model-type id #{}))
+  ([model-type id seen] (loop [queue (upstream* model-type id)
+                               seen seen]
+                          (if (empty? queue)
+                            seen
+                            (let [[m id] (first queue)]
+                              (if (contains? seen [m id])
+                                (recur (rest queue) seen)
+                                (recur (into (rest queue) (upstream* m id ))
+                                       (conj seen [m id]))))))))
 
 (comment
   (upstream* :model/Database 1)
@@ -178,21 +186,7 @@
   (upstream* :model/Dashboard 10)
   ;; => [[:model/Card 10]]
 
-(defn upstream
-  ([model-type id]
-   (upstream model-type id #{}))
-  ([model-type id seen]
-   (loop [queue (upstream* model-type id)
-          seen seen]
-     (if (empty? queue)
-       seen
-       (let [[m id] (first queue)]
-         (if (contains? seen [m id])
-           (recur (rest queue) seen)
-           (recur (into (rest queue) (upstream* m id ))
-                  (conj seen [m id]))))))))
-
-(upstream :model/Dashboard 10)
+  (upstream :model/Dashboard 10)
 
 ;; => ([:model/Dashboard 10] [:model/Card 10] [:model/Table 5] [:model/Database 1])
 
