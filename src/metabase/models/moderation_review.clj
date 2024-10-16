@@ -14,7 +14,7 @@
 
 (def statuses
   "Schema enum of the acceptable values for the `status` column"
-  #{"verified" nil})
+  #{"verified" "flagged" nil})
 
 (def Statuses
   "Schema of valid statuses"
@@ -159,11 +159,11 @@
     :model/Dashboard (mapv
                       (fn [db-id] [:model/Card db-id])
                       (map :card_id
-                           (t2/query {:select [ :dashcard.card_id]
+                           (t2/query {:select [:dashcard.card_id :dashcard.dashboard_id]
                                       :from   [[:report_dashboardcard :dashcard]]
-                                      :join   [[:report_card :card] [:= :dashcard.card_id :card.id]
-                                               [:report_dashboard :dashboard] [:= :dashcard.card_id :dashboard.id]]
-                                      :where [:= :dashboard.id id]})))))
+                                      :join   [[:report_card :card] [:= :dashcard.card_id :card.id]]
+                                      :where [:= :dashcard.dashboard_id 10]})))))
+
 
 (comment
   (upstream* :model/Database 1)
@@ -178,9 +178,23 @@
   (upstream* :model/Dashboard 10)
   ;; => [[:model/Card 10]]
 
-  (defn upstream [model-type id]
+(defn upstream
+  ([model-type id]
+   (upstream model-type id #{}))
+  ([model-type id seen]
+   (loop [queue (upstream* model-type id)
+          seen seen]
+     (if (empty? queue)
+       seen
+       (let [[m id] (first queue)]
+         (if (contains? seen [m id])
+           (recur (rest queue) seen)
+           (recur (into (rest queue) (upstream* m id ))
+                  (conj seen [m id]))))))))
 
-    )
+(upstream :model/Dashboard 10)
+
+;; => ([:model/Dashboard 10] [:model/Card 10] [:model/Table 5] [:model/Database 1])
 
   ;; TODO: downstream
 
