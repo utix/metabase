@@ -19,6 +19,12 @@
   "Schema of valid statuses"
   [:maybe (into [:enum] statuses)])
 
+(def reasons
+  {:no-updates "No updates"
+   :other      "Other"})
+
+(def Reasons (into [:enum] (keys reasons)))
+
 ;;; currently unused, but I'm leaving this in commented out because it serves as documentation
 (comment
   (def ReviewChanges
@@ -28,7 +34,10 @@
      [:moderated_item_id   {:optional true} mu/IntGreaterThanZero]
      [:moderated_item_type {:optional true} moderation/moderated-item-types]
      [:status              {:optional true} Statuses]
-     [:text                {:optional true} [:maybe :string]]]))
+     [:text                {:optional true} [:maybe :string]]
+
+     [:reason              {:optional true} Reasons]
+     [:valid_until         {:optional true} ms/PositiveInt]]))
 
 (def ModerationReview
   "Used to be the toucan1 model name defined using [[toucan.models/defmodel]], now it's a reference to the toucan2 model name.
@@ -51,8 +60,8 @@
   10)
 
 (mu/defn delete-extra-reviews!
-  "Delete extra reviews to maintain an invariant of only `max-moderation-reviews`. Called before inserting so actuall
-  insures there are one fewer than that so you can add afterwards."
+  "Delete extra reviews to maintain an invariant of only `max-moderation-reviews`. Called before inserting so actually
+  insures there are one fewer than [[max-moderation-reviews]] that so you can add afterwards."
   [item-id   :- :int
    item-type :- :string]
   (let [ids (into #{} (comp (map :id)
@@ -72,16 +81,110 @@
 
 (mu/defn create-review!
   "Create a new ModerationReview"
-  [params :-
-   [:map
-    [:moderated_item_id       ms/PositiveInt]
-    [:moderated_item_type     moderation/moderated-item-types]
-    [:moderator_id            ms/PositiveInt]
-    [:status              {:optional true} Statuses]
-    [:text                {:optional true} [:maybe :string]]]]
+  [params :- [:map
+              [:moderated_item_id    ms/PositiveInt]
+              [:moderated_item_type  moderation/moderated-item-types]
+              [:moderator_id         ms/PositiveInt]
+              [:status               {:optional true} Statuses]
+              [:text                 {:optional true} [:maybe :string]]
+
+              [:valid-until  {:optional true}]
+              [:reason       {:optional true} [:enum :no-updates :other]]]]
   (t2/with-transaction [_conn]
     (delete-extra-reviews! (:moderated_item_id params) (:moderated_item_type params))
     (t2/update! ModerationReview {:moderated_item_id   (:moderated_item_id params)
                                   :moderated_item_type (:moderated_item_type params)}
                 {:most_recent false})
     (first (t2/insert-returning-instances! ModerationReview (assoc params :most_recent true)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; NOTE:
+
+
+(def verifiable-models
+  ;; - Verified means that a `user` confirms the content adheres to business definitions and is actively maintained.
+  ;;   Flagged means there is something wrong with it (and tells why). Nothing means it wasn't explicitly
+  ;;   verified (might or might not work).
+
+  ;; - Can be applied to: dashboards, questions, and models.
+
+  ;; - Is set manually and can have an expiration date.
+  #{:dashboard
+    :card
+    :model ;; card with type = :model
+    })
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+(def healthyness-models
+  ;; - Healthy means the data is good and passing automated data tests. Unhealthy means something is wrong (and tells
+  ;;   why). Neutral means there aren't tests, but it is also not broken.
+
+  ;; - Can be applied to: databases, schemas, tables, and models.
+
+  ;; - It operates in a cascading effect. If a database is unhealthy, all underlying schemas, tables, and models are
+  ;;   also unhealthy.
+
+  ;; - Can be set automatically (by a data test) or manually (by a user).
+  #{:database
+    :schema
+    :table
+    :model ;; card with type = :model
+    })
+
+
+;; to keep track of the most recent statuses
+
+;; database
+;; |- schema (lives on table)
+;;    |- table
+;;       |- card (questions and models)
+;;          |- dashboard
+
+(defn upstream*
+  "Finds 'upstream' entities for a given model.
+   This is used to flow healthyness through the system.
+   If any entities upstream of the model are unhealthy, the then the "
+  [model-type id]
+  (case model-type
+    :model/Database []
+    :model/Table (mapv (fn [db-id] [:model/Database db-id])
+                       (distinct (map :db_id (t2/select [:model/Table :db_id] id))))
+    :model/Card (mapv (fn [db-id] [:model/Table db-id])
+                      (distinct (map :table_id (t2/select [:model/Card :table_id] id))))
+    :model/Dashboard (mapv
+                      (fn [db-id] [:model/Card db-id])
+                      (map :card_id
+                           (t2/query {:select [ :dashcard.card_id]
+                                      :from   [[:report_dashboardcard :dashcard]]
+                                      :join   [[:report_card :card] [:= :dashcard.card_id :card.id]
+                                               [:report_dashboard :dashboard] [:= :dashcard.card_id :dashboard.id]]
+                                      :where [:= :dashboard.id id]})))))
+
+(comment
+  (upstream* :model/Database 1)
+  ;; => []
+
+  (upstream* :model/Table 5)
+  ;; => [[:model/Database 1]]
+
+  (upstream* :model/Card 1)
+  ;; => [[:model/Table 5]]
+
+  (upstream* :model/Dashboard 10)
+  ;; => [[:model/Card 10]]
+
+  (defn upstream [model-type id]
+
+    )
+
+  ;; TODO: downstream
+
+  (map
+   (fn [[m id]] (upstream* m id))
+   (upstream* :model/Dashboard 10)))

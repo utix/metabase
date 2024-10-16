@@ -10029,6 +10029,49 @@ databaseChangeLog:
                   constraints:
                     nullable: true
 
+  - changeSet:
+      id: v52.2024-10-16T08:00:00
+      author: escherize
+      comment: Add reason column to moderation_review
+      preConditions:
+        - not:
+            - columnExists:
+                tableName: moderation_review
+                columnName: reason
+      changes:
+        - addColumn:
+            tableName: moderation_review
+            columns:
+              - column:
+                  name: reason
+                  type: varchar(128)
+                  defaultValue: null
+                  remarks: The reason for marking an entity's verification status
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: v52.2024-10-16T08:00:01
+      author: escherize
+      comment: Add valid_until column to moderation_review
+      preConditions:
+        - not:
+            - columnExists:
+                tableName: moderation_review
+                columnName: valid_until
+      changes:
+        - addColumn:
+            tableName: moderation_review
+            columns:
+              - column:
+                  name: valid_until
+                  type: ${timestamp_type}
+                  defaultValue: null
+                  remarks: The time that an entity's verification status will be converted to 'expired'
+                  constraints:
+                    nullable: true
+
+
   # >>>>>>>>>> DO NOT ADD NEW MIGRATIONS BELOW THIS LINE! ADD THEM ABOVE <<<<<<<<<<
 
 ########################################################################################################################
