@@ -9,7 +9,8 @@
    [metabase.util.malli :as mu]
    [metabase.util.malli.schema :as ms]
    [methodical.core :as methodical]
-   [toucan2.core :as t2]))
+   [toucan2.core :as t2])
+  (:import [java.time LocalDateTime]))
 
 (def statuses
   "Schema enum of the acceptable values for the `status` column"
@@ -37,7 +38,7 @@
      [:text                {:optional true} [:maybe :string]]
 
      [:reason              {:optional true} Reasons]
-     [:valid_until         {:optional true} ms/PositiveInt]]))
+     [:valid_until         {:optional true} :any]]))
 
 (def ModerationReview
   "Used to be the toucan1 model name defined using [[toucan.models/defmodel]], now it's a reference to the toucan2 model name.
@@ -87,9 +88,8 @@
               [:moderator_id         ms/PositiveInt]
               [:status               {:optional true} Statuses]
               [:text                 {:optional true} [:maybe :string]]
-
-              [:valid-until  {:optional true}]
-              [:reason       {:optional true} [:enum :no-updates :other]]]]
+              [:reason       {:optional true} [:enum :no-updates :other]]
+              [:valid-until  {:optional true} :any]]]
   (t2/with-transaction [_conn]
     (delete-extra-reviews! (:moderated_item_id params) (:moderated_item_type params))
     (t2/update! ModerationReview {:moderated_item_id   (:moderated_item_id params)
@@ -116,9 +116,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 
 (def healthyness-models
