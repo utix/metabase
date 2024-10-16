@@ -24,7 +24,9 @@
   {:no-updates "No updates"
    :other      "Other"})
 
-(def Reasons (into [:enum] (keys reasons)))
+(def Reasons
+  "Reasons for content verification."
+  (into [:enum] (keys reasons)))
 
 ;;; currently unused, but I'm leaving this in commented out because it serves as documentation
 (comment
