@@ -12,11 +12,11 @@ const QuestionModerationIcon = ({
 }: QuestionModerationIconProps): JSX.Element | null => {
   const review = getLatestModerationReview(question.getModerationReviews());
 
-  if (review) {
-    return <ModerationReviewIcon review={review} />;
-  } else {
-    return null;
-  }
+  // if (review) {
+  return <ModerationReviewIcon review={review} question={question} />;
+  // } else {
+  //   return null;
+  // }
 };
 
 // eslint-disable-next-line import/no-default-export -- deprecated usage

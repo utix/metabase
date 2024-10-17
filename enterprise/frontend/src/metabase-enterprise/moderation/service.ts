@@ -51,7 +51,11 @@ export const getStatusIcon = (
   filled = false,
 ): { name: IconName; color: ColorName } | NoIcon => {
   if (!status || isRemovedReviewStatus(status)) {
-    return noIcon;
+    console.log("no status");
+    return {
+      name: "verified",
+      color: "grey",
+    };
   }
 
   if (status === "verified" && filled) {
@@ -78,6 +82,7 @@ export function getLatestModerationReview(reviews: ModerationReview[]) {
   if (!maybeReview) {
     return undefined;
   }
+  return maybeReview;
   // since we can't delete reviews, consider a most recent review with a status of null to mean there is no review
   return isRemovedReviewStatus(maybeReview.status) ? undefined : maybeReview;
 }

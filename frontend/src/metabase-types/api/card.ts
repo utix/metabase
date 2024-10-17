@@ -11,7 +11,7 @@ import type { Parameter } from "./parameters";
 import type { DatasetQuery, FieldReference, PublicDatasetQuery } from "./query";
 import type { CollectionEssentials } from "./search";
 import type { Table } from "./table";
-import type { UserInfo } from "./user";
+import type { User, UserInfo } from "./user";
 import type { CardDisplayType, VisualizationDisplay } from "./visualization";
 import type { SmartScalarComparison } from "./visualization-settings";
 
@@ -241,6 +241,7 @@ export interface ModerationReview {
   moderator_id: number;
   created_at: string;
   most_recent?: boolean;
+  user: User;
 }
 
 export type CardId = number;

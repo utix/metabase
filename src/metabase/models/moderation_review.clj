@@ -88,7 +88,7 @@
               [:moderator_id         ms/PositiveInt]
               [:status               {:optional true} Statuses]
               [:text                 {:optional true} [:maybe :string]]
-              [:reason       {:optional true} [:enum :no-updates :other]]
+              [:reason       {:optional true} [:maybe [:enum :no-updates :other]]]
               [:valid_until  {:optional true} :any]]]
   (t2/with-transaction [_conn]
     (delete-extra-reviews! (:moderated_item_id params) (:moderated_item_type params))

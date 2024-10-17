@@ -18,7 +18,7 @@ const mapStateToProps = (state: State) => ({
 
 const userProps = {
   id: (state: State, props: ModerationReviewIconProps) =>
-    props.review.moderator_id,
+    props.review?.moderator_id,
   entityAlias: "moderator",
   loadingAndErrorWrapper: false,
 };
