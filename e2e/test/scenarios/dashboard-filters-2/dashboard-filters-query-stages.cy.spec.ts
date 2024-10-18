@@ -136,7 +136,7 @@ describe("scenarios > dashboard > filters > query stages", () => {
     const BASE_MODEL_INDEX = 2;
 
     beforeEach(() => {
-      cy.then(function () {
+      cy.then(function() {
         createAndVisitDashboard([
           this.ordersQuestion,
           this.baseQuestion,
@@ -831,19 +831,19 @@ describe("scenarios > dashboard > filters > query stages", () => {
         });
 
         // TODO: https://github.com/metabase/metabase/issues/46774
-        it.skip("1st stage implicit join (joined data source)", () => {
+        it("1st stage implicit join (joined data source)", () => {
           setup1stStageImplicitJoinFromJoinFilter();
 
           verifyDashcardCellValues({
             dashcardIndex: 0,
-            values: ["4,449", "17,722"],
+            values: ["4,447", "17,714"],
           });
 
           goBackToDashboard();
 
           verifyDashcardCellValues({
             dashcardIndex: 1,
-            values: ["4,449", "17,722"],
+            values: ["4,447", "17,714"],
           });
         });
 
@@ -880,19 +880,19 @@ describe("scenarios > dashboard > filters > query stages", () => {
         });
 
         // TODO: https://github.com/metabase/metabase/issues/46774
-        it.skip("1st stage breakout", () => {
+        it("1st stage breakout", () => {
           setup1stStageBreakoutFilter();
 
           verifyDashcardCellValues({
             dashcardIndex: 0,
-            values: ["4,449", "17,722"],
+            values: ["4,447", "17,714"],
           });
 
           goBackToDashboard();
 
           verifyDashcardCellValues({
             dashcardIndex: 1,
-            values: ["4,449", "17,722"],
+            values: ["4,447", "17,714"],
           });
         });
 
@@ -1087,7 +1087,7 @@ describe("scenarios > dashboard > filters > query stages", () => {
         });
 
         // TODO: https://github.com/metabase/metabase/issues/46774
-        it.skip("1st stage implicit join (joined data source)", () => {
+        it.only("1st stage implicit join (joined data source)", () => {
           setup1stStageImplicitJoinFromJoinFilter();
 
           verifyDashcardRowsCount({
@@ -1859,7 +1859,7 @@ function createBaseQuestions() {
     },
   }).then(response => cy.wrap(response.body).as("ordersQuestion"));
 
-  cy.then(function () {
+  cy.then(function() {
     createQuestion({
       type: "question",
       name: "Base Orders Question",
@@ -2082,7 +2082,7 @@ function createQ9Query(source: Card): StructuredQuery {
 type CreateQuery = (source: Card) => StructuredQuery;
 
 function createAndVisitDashboardWithCardMatrix(createQuery: CreateQuery) {
-  cy.then(function () {
+  cy.then(function() {
     createQuestion({
       type: "question",
       query: createQuery(this.baseQuestion),
@@ -2108,7 +2108,7 @@ function createAndVisitDashboardWithCardMatrix(createQuery: CreateQuery) {
     }).then(response => cy.wrap(response.body).as("mbm"));
   });
 
-  cy.then(function () {
+  cy.then(function() {
     const cards = [this.qbq, this.mbq, this.qbm, this.mbm];
     createAndVisitDashboard(cards);
   });

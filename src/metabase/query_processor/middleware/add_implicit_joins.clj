@@ -33,8 +33,8 @@
          (when-not (some #{:source-metadata} &parents)
            &match))))
 
-(defn- join-alias [dest-table-name source-fk-field-name]
-  (str dest-table-name "__via__" source-fk-field-name))
+(defn- join-alias [dest-table-name source-fk-field-name source-table-name]
+  (str dest-table-name "__via__" source-fk-field-name "__of__" source-table-name))
 
 (def ^:private JoinInfo
   [:map
@@ -53,16 +53,19 @@
     (let [fk-fields        (lib.metadata/bulk-metadata-or-throw (qp.store/metadata-provider) :metadata/column fk-field-ids)
           target-field-ids (into #{} (keep :fk-target-field-id) fk-fields)
           target-fields    (when (seq target-field-ids)
-                             (lib.metadata/bulk-metadata-or-throw (qp.store/metadata-provider) :metadata/column fk-field-ids))
-          target-table-ids (into #{} (keep :table-id) target-fields)]
+                             (lib.metadata/bulk-metadata-or-throw (qp.store/metadata-provider) :metadata/column target-field-ids))
+          target-table-ids (into #{} (keep :table-id) target-fields)
+          fk-table-ids     (into #{} (keep :table-id) fk-fields)]
       ;; this is for cache-warming purposes.
       (when (seq target-table-ids)
-        (lib.metadata/bulk-metadata-or-throw (qp.store/metadata-provider) :metadata/table target-table-ids))
-      (for [{fk-name :name, fk-field-id :id, pk-id :fk-target-field-id} fk-fields
-            :when                                                       pk-id]
+        (lib.metadata/bulk-metadata-or-throw (qp.store/metadata-provider) :metadata/table (concat target-table-ids
+                                                                                                  fk-table-ids)))
+      (for [{fk-name :name, fk-field-id :id, pk-id :fk-target-field-id, fk-table :table-id} fk-fields
+            :when                                                                              pk-id]
         (let [{source-table :table-id} (lib.metadata.protocols/field (qp.store/metadata-provider) pk-id)
               {table-name :name}       (lib.metadata.protocols/table (qp.store/metadata-provider) source-table)
-              alias-for-join           (join-alias table-name fk-name)]
+              {fk-table-name :name}    (lib.metadata.protocols/table (qp.store/metadata-provider) fk-table)
+              alias-for-join           (join-alias table-name fk-name fk-table-name)]
           (-> {:source-table source-table
                :alias        alias-for-join
                :fields       :none
@@ -137,7 +140,11 @@
               [:field id-or-name (opts :guard (every-pred :source-field (complement :join-alias)))]
               (if-not (some #{:source-metadata} &parents)
                 (let [join-alias (or (fk-field-id->join-alias (:source-field opts))
-                                     (throw (ex-info (tru "Cannot find matching FK Table ID for FK Field {0}"
+                                     (do (tap> {:phase :alias-to-field
+                                                :resolving  &match
+                                                :candidates fk-field-id->join-alias
+                                                :form       form})
+                                         (throw (ex-info (tru "Cannot find matching FK Table ID for FK Field {0}"
                                                           (format "%s %s"
                                                                   (pr-str (:source-field opts))
                                                                   (let [field (lib.metadata/field
@@ -146,18 +153,33 @@
                                                                     (pr-str (:display-name field)))))
                                                      {:resolving  &match
                                                       :candidates fk-field-id->join-alias
-                                                      :form       form})))]
+                                                      :form       form}))))]
                   [:field id-or-name (assoc opts :join-alias join-alias)])
                 &match))
       (sequential? (:fields form)) (update :fields distinct-fields))))
 
 (defn- already-has-join?
   "Whether the current query level already has a join with the same alias."
-  [{:keys [joins source-query]} {join-alias :alias, :as join}]
-  (or (some #(= (:alias %) join-alias)
+  [{:keys [joins source-query]} {join-alias :alias, :keys [fk-field-id], :as join}]
+  (or (some #(and (= (:alias %) join-alias)
+                  (= (:fk-field-id %) fk-field-id))
             joins)
       (when source-query
         (recur source-query join))))
+
+;; TODO(BT) implement lib.equality style ref matching
+(defn- join-provides-field
+  [{:keys [fields source-metadata source-table] :as join} field-clause]
+  (case fields
+    :all (let [cols (or source-metadata
+                        (lib.metadata.protocols/fields (qp.store/metadata-provider) source-table))]
+           (when (some (comp #{field-clause} :field-ref) cols)
+             join))
+
+    :none nil
+
+    (when (some #{field-clause} fields)
+      join)))
 
 (defn- add-condition-fields-to-source
   "Add any fields that are needed for newly-added join conditions to source query `:fields` if they're not already
@@ -165,16 +187,20 @@
   [{{source-query-fields :fields} :source-query, :keys [joins], :as form}]
   (if (empty? source-query-fields)
     form
-    (let [needed (set (filter some? (map (comp ::needs meta) joins)))]
+    (let [needed (->> (set (filter some? (map (comp ::needs meta) joins)))
+                      (filter (fn [field-clause]
+                                (some #(join-provides-field % field-clause) joins))))]
       (update-in form [:source-query :fields] (fn [existing-fields]
                                                 (distinct-fields (concat existing-fields needed)))))))
 
-(defn- add-referenced-fields-to-source [form reused-joins]
+(defn- add-referenced-fields-to-source [{:keys [joins] :as form} reused-joins]
   (let [reused-join-alias? (set (map :alias reused-joins))
-        referenced-fields  (set (lib.util.match/match (dissoc form :source-query :joins)
-                                  [:field _ (_ :guard (fn [{:keys [join-alias]}]
-                                                        (reused-join-alias? join-alias)))]
-                                  &match))]
+        referenced-fields  (->> (set (lib.util.match/match (dissoc form :source-query :joins)
+                                       [:field _ (_ :guard (fn [{:keys [join-alias]}]
+                                                             (reused-join-alias? join-alias)))]
+                                       &match))
+                                (filter (fn [field-clause]
+                                          (some #(join-provides-field % field-clause) joins))))]
     (update-in form [:source-query :fields] (fn [existing-fields]
                                               (distinct-fields
                                                (concat existing-fields referenced-fields))))))
@@ -256,6 +282,12 @@
         new-joins                (implicitly-joined-fields->joins implicitly-joined-fields)
         required-joins           (remove (partial already-has-join? form) new-joins)
         reused-joins             (set/difference (set new-joins) (set required-joins))]
+    (tap> {:phase :this-level
+           :form form
+           :implicitly-joined-fields implicitly-joined-fields
+           :new-joins new-joins
+           :required-joins required-joins
+           :reused-joins reused-joins})
     (cond-> form
       (seq required-joins) (update :joins (fn [existing-joins]
                                             (m/distinct-by
