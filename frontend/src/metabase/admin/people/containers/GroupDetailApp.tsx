@@ -26,7 +26,7 @@ export const GroupDetailApp = ({
   }, [refetch, users.data.length]);
 
   if (!isGroupLoading && group && !isUserListLoading) {
-    return <GroupDetail group={group} users={users.data} />;
+    return <GroupDetail group={group} />;
   }
   return null;
 };

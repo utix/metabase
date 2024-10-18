@@ -21,7 +21,7 @@ import type {
   FieldId,
   ForeignKey,
   GroupListQuery,
-  type GroupUserMembership,
+  GroupUserMembership,
   ModelCacheRefreshStatus,
   ModelIndex,
   NativeQuerySnippet,
