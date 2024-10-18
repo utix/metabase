@@ -41,7 +41,7 @@
                                                                         :schema-filters-patterns "test-data"
                                                                         :schema-filters-type "exclusion"))]
         (testing "tables from multiple schemas were found"
-          (is (not (contains? (set (map :schema (:tables actual-tables))) "test-data")))
+          (is (not-any? (comp #{"test-data"} :schema) (:tables actual-tables)))
           (is (contains? (:tables actual-tables) {:name "airport", :schema "airports", :description nil}))
           (is (contains? (:tables actual-tables) {:name "bird", :schema "bird-flocks", :description nil})))))))
 
