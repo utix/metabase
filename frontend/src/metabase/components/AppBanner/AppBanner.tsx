@@ -2,6 +2,7 @@ import { useSetting } from "metabase/common/hooks";
 import { useSelector } from "metabase/lib/redux";
 import { PaymentBanner } from "metabase/nav/components/PaymentBanner/PaymentBanner";
 import { ReadOnlyBanner } from "metabase/nav/components/ReadOnlyBanner";
+import { TrialBanner } from "metabase/nav/components/TrialBanner";
 import { getUserIsAdmin } from "metabase/selectors/user";
 
 export const AppBanner = () => {
@@ -22,6 +23,10 @@ export const AppBanner = () => {
 
   if (readOnly) {
     return <ReadOnlyBanner />;
+  }
+
+  if (tokenStatus?.trial) {
+    return <TrialBanner tokenStatus={tokenStatus} />;
   }
 
   if (shouldRenderPaymentBanner) {
