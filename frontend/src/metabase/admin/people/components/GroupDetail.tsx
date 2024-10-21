@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import cx from "classnames";
 import { Fragment, useEffect, useState } from "react";
 import { msgid, ngettext, t } from "ttag";
