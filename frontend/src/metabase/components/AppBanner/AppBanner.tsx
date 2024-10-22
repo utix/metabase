@@ -4,9 +4,12 @@ import { PaymentBanner } from "metabase/nav/components/PaymentBanner/PaymentBann
 import { ReadOnlyBanner } from "metabase/nav/components/ReadOnlyBanner";
 import { TrialBanner } from "metabase/nav/components/TrialBanner";
 import { getUserIsAdmin } from "metabase/selectors/user";
+import { getIsHosted } from "metabase/setup/selectors";
 
 export const AppBanner = () => {
   const isAdmin = useSelector(getUserIsAdmin);
+  const isHosted = useSelector(getIsHosted);
+
   const tokenStatus = useSetting("token-status");
   const readOnly = useSetting("read-only-mode");
 
@@ -25,7 +28,7 @@ export const AppBanner = () => {
     return <ReadOnlyBanner />;
   }
 
-  if (tokenStatus?.trial) {
+  if (tokenStatus?.trial && isHosted) {
     return <TrialBanner tokenStatus={tokenStatus} />;
   }
 
