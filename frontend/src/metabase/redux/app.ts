@@ -1,3 +1,7 @@
+import {
+  type PayloadAction,
+  createSlice,
+} from "@reduxjs/toolkit";
 import { LOCATION_CHANGE, push } from "react-router-redux";
 
 import {
@@ -10,7 +14,12 @@ import {
   createAction,
   handleActions,
 } from "metabase/lib/redux";
-import type { Dispatch } from "metabase-types/store";
+import type {
+  Dispatch,
+  TempStorage,
+  TempStorageKey,
+  TempStorageValue,
+} from "metabase-types/store";
 
 interface LocationChangeAction {
   type: string; // "@@router/LOCATION_CHANGE"
@@ -110,6 +119,24 @@ const isErrorDiagnosticsOpen = handleActions(
   false,
 );
 
+const tempStorageSlice = createSlice({
+  name: "tempStorage",
+  initialState: {} as TempStorage,
+  reducers: {
+    setTempSetting: (
+      state,
+      action: PayloadAction<{
+        key: TempStorageKey;
+        value: TempStorageValue<TempStorageKey>;
+      }>,
+    ) => {
+      state[action.payload.key] = action.payload.value;
+    },
+  },
+});
+
+export const { setTempSetting } = tempStorageSlice.actions;
+
 // eslint-disable-next-line import/no-default-export -- deprecated usage
 export default combineReducers({
   errorPage,
@@ -121,4 +148,5 @@ export default combineReducers({
     return true;
   },
   isErrorDiagnosticsOpen,
+  tempStorage: tempStorageSlice.reducer,
 });
