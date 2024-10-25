@@ -10,12 +10,12 @@ import {
 } from "embedding-sdk/components/private/PublicComponentWrapper";
 import { Box, Button, Group, Icon } from "metabase/ui";
 
-import { InteractiveQuestion } from "../../public/InteractiveQuestion";
-import { useInteractiveQuestionContext } from "../InteractiveQuestion/context";
 import {
   FlexibleSizeComponent,
   type FlexibleSizeProps,
-} from "../util/FlexibleSizeComponent";
+} from "../../public/FlexibleSizeComponent";
+import { InteractiveQuestion } from "../../public/InteractiveQuestion";
+import { useInteractiveQuestionContext } from "../InteractiveQuestion/context";
 
 import InteractiveQuestionS from "./InteractiveQuestionResult.module.css";
 

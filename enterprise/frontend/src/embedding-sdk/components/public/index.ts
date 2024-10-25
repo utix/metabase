@@ -18,6 +18,7 @@ export type {
   CreateDashboardModalProps,
   CreateDashboardValues,
 } from "./CreateDashboardModal";
+export { FlexibleSizeComponent } from "./FlexibleSizeComponent";
 
 // These functions looks useless but it's a trick to have a way to type the config
 // while having code snippets the same across js and ts. This works because the

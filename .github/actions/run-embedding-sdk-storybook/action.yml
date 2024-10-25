@@ -1,4 +1,8 @@
 name: Run Embedding SDK Storybook
+inputs:
+  sdk_version:
+    description: Published SDK npm package tag or "local"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -12,6 +16,11 @@ runs:
 
     - name: Compile CLJS
       run: yarn build-pure:cljs
+      shell: bash
+
+    - name: Install SDK package
+      if: ${{ input.sdk_version !== 'local' }}
+      run: yarn add @metabase/embedding-sdk-react@${{ input.sdk_version }}
       shell: bash
 
     - name: Build Storybook
