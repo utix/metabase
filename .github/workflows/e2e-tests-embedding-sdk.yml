@@ -1,4 +1,4 @@
-name: E2E Tests for Embedding SDK
+name: E2E Cross-version Tests for Embedding SDK
 
 on:
   push:
