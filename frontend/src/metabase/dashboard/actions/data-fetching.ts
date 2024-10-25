@@ -35,7 +35,12 @@ import {
 } from "metabase/lib/redux";
 import { equals } from "metabase/lib/utils";
 import { uuid } from "metabase/lib/uuid";
+import {
+  getDashboardQuestions,
+  getDashboardUiParameters,
+} from "metabase/parameters/utils/dashboards";
 import { addFields, addParamValues } from "metabase/redux/metadata";
+import { getMetadata } from "metabase/selectors/metadata";
 import {
   AutoApi,
   CardApi,
@@ -729,10 +734,18 @@ export const fetchDashboard = createAsyncThunk(
 
       const lastUsedParametersValues = result["last_used_param_values"] ?? {};
 
+      const metadata = getMetadata(getState());
+      const questions = getDashboardQuestions(result.dashcards, metadata);
+      const parameters = getDashboardUiParameters(
+        result.dashcards,
+        result.parameters ?? [],
+        metadata,
+        questions,
+      );
       const parameterValuesById = preserveParameters
         ? getParameterValues(getState())
         : getParameterValuesByIdFromQueryParams(
-            result.parameters ?? [],
+            parameters,
             queryParams,
             lastUsedParametersValues,
           );
