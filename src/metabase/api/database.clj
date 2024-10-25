@@ -804,18 +804,19 @@
       ;; Throw a 500 if nothing is inserted
       (u/prog1 (api/check-500 (first (t2/insert-returning-instances!
                                       Database
-                                      (merge
-                                       {:name         name
-                                        :engine       engine
-                                        :details      details-or-error
-                                        :is_full_sync is_full_sync
-                                        :is_on_demand is_on_demand
-                                        :cache_ttl    cache_ttl
-                                        :creator_id   api/*current-user-id*}
-                                       (when schedules
-                                         (sync.schedules/schedule-map->cron-strings schedules))
-                                       (when (some? auto_run_queries)
-                                         {:auto_run_queries auto_run_queries})))))
+                                      (do (def x (merge
+                                                  {:name         name
+                                                   :engine       engine
+                                                   :details      details-or-error
+                                                   :is_full_sync is_full_sync
+                                                   :is_on_demand is_on_demand
+                                                   :cache_ttl    cache_ttl
+                                                   :creator_id   api/*current-user-id*}
+                                                  (when schedules
+                                                    (sync.schedules/schedule-map->cron-strings schedules))
+                                                  (when (some? auto_run_queries)
+                                                    {:auto_run_queries auto_run_queries})))
+                                          x))))
         (events/publish-event! :event/database-create {:object <> :user-id api/*current-user-id*})
         (snowplow/track-event! ::snowplow/database
                                {:event        :database-connection-successful

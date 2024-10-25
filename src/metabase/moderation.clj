@@ -33,15 +33,40 @@
     (let [item-ids    (not-empty (keep :id items))
           all-reviews (when item-ids
                         (group-by (juxt :moderated_item_type :moderated_item_id)
-                                  (t2/select 'ModerationReview
-                                             :moderated_item_type "card"
+                                  (t2/select :model/ModerationReview
                                              :moderated_item_id [:in item-ids]
                                              {:order-by [[:id :desc]]})))]
       (for [item items]
         (if (nil? item)
           nil
           (let [k ((juxt (comp keyword object->type) u/the-id) item)]
-            (assoc item :moderation_reviews (get all-reviews k ()))))))))
+            (assoc item :moderation_reviews (get all-reviews k []))))))))
+
+(mi/define-batched-hydration-method moderation-reviews-for-items
+  :moderation_reviews
+  "Hydrate moderation reviews onto a seq of items. All are cards and dashboards, or the nils that end up here on text
+  dashboard cards."
+  [items]
+  ;; no need to do work on empty items. Also, can have nil here due to text cards. I think this is a bug in toucan. To
+  ;; get here we are `(t2/hydrate dashboard [:dashcards [:card :moderation_reviews] :series] ...)` But dashcards
+  ;; dont have to have cards. but the hydration will pass the nil card id into here.  NOTE: it is important that each
+  ;; item that comes into this comes out. The nested hydration is positional, not by an id so everything that comes in
+  ;; must go out in the same order
+  (when (seq items)
+    (let [item-ids    (not-empty (keep :id items))
+          all-reviews (when item-ids
+                        (group-by (juxt :moderated_item_type :moderated_item_id)
+                                  (t2/select :model/ModerationReview
+                                             :moderated_item_id [:in item-ids]
+                                             {:order-by [[:id :desc]]})))]
+      (for [item items]
+        (if (nil? item)
+          nil
+          (let [k ((juxt (comp keyword object->type) u/the-id) item)]
+            (assoc item :moderation_reviews (get all-reviews k []))))))))
+
+
+
 
 (mi/define-batched-hydration-method moderation-user-details
   :moderator_details

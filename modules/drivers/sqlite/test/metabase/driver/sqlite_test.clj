@@ -53,6 +53,7 @@
   (mt/test-driver :sqlite
     (testing "Make sure we correctly infer complex types in views (#8630, #9276, #12191, #12547, #10681)"
       (let [details (mt/dbdef->connection-details :sqlite :db {:database-name "views_test"})
+            ;; {:db "views_test.sqlite"}
             spec    (sql-jdbc.conn/connection-details->spec :sqlite details)]
         (t2.with-temp/with-temp [Database {db-id :id :as database} {:engine :sqlite, :details (assoc details :dbname "views_test")}]
           (doseq [statement ["drop view if exists v_groupby_test;"
@@ -114,6 +115,8 @@
                                              {:where    [:in :name ["groupby_test" "v_groupby_test"]]
                                               :order-by [:name]}) :fields)
                       (map table-fingerprint)))))))))
+;; =>
+;; =>
 
 (defn- default-table-result [table-name]
   {:name        table-name
