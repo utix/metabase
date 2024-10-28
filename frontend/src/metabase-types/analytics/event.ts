@@ -52,6 +52,23 @@ export type NewIFrameCardCreatedEvent = ValidateEvent<{
   target_id: number | null;
 }>;
 
+export type MoveToTrashEvent = ValidateEvent<{
+  event: "moved-to-trash";
+  target_id: number | null;
+  triggered_from: "collection" | "detail_page" | "cleanup_modal";
+  duration_ms: number | null;
+  result: "success" | "failure";
+  event_detail:
+    | "question"
+    | "model"
+    | "metric"
+    | "dashboard"
+    | "collection"
+    | "dataset"
+    | "indexed-entity"
+    | "snippet";
+}>;
+
 export type SimpleEvent =
   | NewIFrameCardCreatedEvent
   | NewsletterToggleClickedEvent
@@ -59,4 +76,5 @@ export type SimpleEvent =
   | OnboardingDatabaseUploadClickedEvent
   | OnboardingChecklistOpenedEvent
   | OnboardingChecklistItemExpandedEvent
-  | OnboardingChecklistItemCTAClickedEvent;
+  | OnboardingChecklistItemCTAClickedEvent
+  | MoveToTrashEvent;
