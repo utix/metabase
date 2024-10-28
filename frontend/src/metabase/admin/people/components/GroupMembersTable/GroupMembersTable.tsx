@@ -52,9 +52,7 @@ export const GroupMembersTable = ({
   const { data: userResponse } = useListUsersQuery({
     limit: PAGE_SIZE,
     offset: PAGE_SIZE * page,
-    group_id: group.id,
   });
-
   const { data: users = [], total = 0 } = userResponse ?? {};
 
   const { isLoading, data: apiKeys } = useListApiKeysQuery();

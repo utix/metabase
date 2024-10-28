@@ -1,7 +1,4 @@
-import {
-  type PayloadAction,
-  createSlice,
-} from "@reduxjs/toolkit";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { LOCATION_CHANGE, push } from "react-router-redux";
 
 import {
