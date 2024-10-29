@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { jt, t } from "ttag";
+import { msgid, ngettext, t } from "ttag";
 
 import { useTempStorage } from "metabase/common/hooks";
 import ExternalLink from "metabase/core/components/ExternalLink";
@@ -49,14 +49,16 @@ export const TrialBanner = ({ tokenStatus }: { tokenStatus: TokenStatus }) => {
       <Group spacing="xs">
         <Icon name="warning_round_filled" w={36} />
         <Text>
-          {jt`${daysRemaining} days left in your trial. ${(
-            <ExternalLink
-              className={CS.textBold}
-              href={href}
-              key="store-link"
-            >{t`Manage your subscription`}</ExternalLink>
-          )}.`}
+          {ngettext(
+            msgid`${daysRemaining} day left in your trial.`,
+            `${daysRemaining} days left in your trial.`,
+            daysRemaining,
+          )}
         </Text>
+        <ExternalLink
+          className={CS.textBold}
+          href={href}
+        >{t`Manage your subscription`}</ExternalLink>
       </Group>
       <Icon
         className={CS.cursorPointer}
