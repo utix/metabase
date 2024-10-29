@@ -131,7 +131,7 @@ describe("ActionMenu", () => {
         model: "collection",
         can_write: true,
         setCollection: jest.fn(),
-        setArchived: jest.fn(),
+        setArchived: jest.fn(() => Promise.resolve()),
       });
 
       const { onMove } = setup({ item });
