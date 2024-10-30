@@ -9,6 +9,7 @@ import type {
   DashboardId,
   Dataset,
   ParameterValueOrArray,
+  TimelineEventId,
 } from "metabase-types/api";
 
 export type QueryBuilderMode = "view" | "notebook" | "dataset";
@@ -41,6 +42,7 @@ export interface QueryBuilderUIControls {
   isShowingChartSettingsSidebar: boolean;
   isShowingQuestionDetailsSidebar: boolean;
   isShowingQuestionInfoSidebar: boolean;
+  isShowingSnippetSidebar: boolean;
   isShowingTimelineSidebar: boolean;
   isNativeEditorOpen: boolean;
   initialChartSetting: null;
@@ -52,10 +54,11 @@ export interface QueryBuilderUIControls {
   isShowingNotebookNativePreview: boolean;
   notebookNativePreviewSidebarWidth: number | null;
   scrollToLastColumn?: boolean;
-  modal: QueryModalType | null;
   dataReferenceStack: DataReferenceStack | null;
   initialChartSettings?: { section: string };
   showSidebarTitle: boolean;
+  modal: QueryModalType | null;
+  modalContext: TimelineEventId | null;
 }
 
 export interface QueryBuilderLoadingControls {

@@ -2,7 +2,7 @@ import { t } from "ttag";
 
 import type {
   QueryBuilderDashboardState,
-  QueryBuilderLoadingControls,
+  QueryBuilderLoadingControls, QueryBuilderQueryStatus,
   QueryBuilderUIControls,
 } from "metabase-types/store";
 
@@ -11,7 +11,6 @@ export const DEFAULT_UI_CONTROLS: QueryBuilderUIControls = {
   showSidebarTitle: true,
   isShowingNotebookNativePreview: false,
   isShowingQuestionDetailsSidebar: false,
-  modal: null,
   notebookNativePreviewSidebarWidth: null,
   scrollToLastColumn: false,
   dataReferenceStack: null,
@@ -33,6 +32,9 @@ export const DEFAULT_UI_CONTROLS: QueryBuilderUIControls = {
   previousQueryBuilderMode: false,
   snippetCollectionId: null,
   datasetEditorTab: "query", // "query" / "metadata"
+  isShowingSnippetSidebar: false,
+  modal: null,
+  modalContext: null,
 };
 
 export const DEFAULT_LOADING_CONTROLS: QueryBuilderLoadingControls = {
@@ -46,9 +48,9 @@ export const DEFAULT_DASHBOARD_STATE: QueryBuilderDashboardState = {
   isEditing: false,
 };
 
-export const DEFAULT_QUERY_STATUS = "idle";
+export const DEFAULT_QUERY_STATUS: QueryBuilderQueryStatus = "idle";
 
-export const UI_CONTROLS_SIDEBAR_DEFAULTS = {
+export const UI_CONTROLS_SIDEBAR_DEFAULTS: Partial<QueryBuilderUIControls> = {
   isShowingSummarySidebar: false,
   isShowingChartSettingsSidebar: false,
   isShowingChartTypeSidebar: false,
@@ -57,7 +59,7 @@ export const UI_CONTROLS_SIDEBAR_DEFAULTS = {
 };
 
 // this is used to close other sidebar when one is updated
-export const CLOSED_NATIVE_EDITOR_SIDEBARS = {
+export const CLOSED_NATIVE_EDITOR_SIDEBARS: Partial<QueryBuilderUIControls> = {
   isShowingTemplateTagsEditor: false,
   isShowingSnippetSidebar: false,
   isShowingDataReference: false,
