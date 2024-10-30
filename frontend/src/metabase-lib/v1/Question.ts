@@ -493,7 +493,7 @@ class Question {
     return this.setCard(assoc(this.card(), "collection_id", collectionId));
   }
 
-  dashboardId(): DashboardId | undefined {
+  dashboardId(): DashboardId | null {
     return this._card.dashboard_id;
   }
 
