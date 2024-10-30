@@ -18,10 +18,12 @@ export const TrialBanner = ({ tokenStatus }: { tokenStatus: TokenStatus }) => {
   const now = dayjs();
   const tokenExpiryDate = dayjs(tokenStatus["valid-thru"]);
   const daysRemaining = tokenExpiryDate.diff(now, "day");
+  const lastDay = daysRemaining === 0;
 
   useEffect(() => {
     if (daysRemaining <= 3) {
       const wasDismissed =
+        lastDismissed &&
         lastDismissed > tokenExpiryDate.subtract(daysRemaining, "day").unix();
 
       setShowBanner(!wasDismissed);
@@ -40,7 +42,7 @@ export const TrialBanner = ({ tokenStatus }: { tokenStatus: TokenStatus }) => {
   return showBanner ? (
     <Flex
       align="center"
-      bg="var(--mb-color-warning)"
+      bg="warning"
       h="xl"
       justify="space-between"
       pl="1.325rem"
@@ -49,16 +51,17 @@ export const TrialBanner = ({ tokenStatus }: { tokenStatus: TokenStatus }) => {
       <Group spacing="xs">
         <Icon name="warning_round_filled" w={36} />
         <Text>
-          {ngettext(
-            msgid`${daysRemaining} day left in your trial.`,
-            `${daysRemaining} days left in your trial.`,
-            daysRemaining,
-          )}
+          {lastDay
+            ? t`Today is the last day of your trial.`
+            : ngettext(
+                msgid`${daysRemaining} day left in your trial.`,
+                `${daysRemaining} days left in your trial.`,
+                daysRemaining,
+              )}
         </Text>
-        <ExternalLink
-          className={CS.textBold}
-          href={href}
-        >{t`Manage your subscription`}</ExternalLink>
+        <ExternalLink className={CS.textBold} href={href}>
+          {t`Manage your subscription.`}
+        </ExternalLink>
       </Group>
       <Icon
         className={CS.cursorPointer}

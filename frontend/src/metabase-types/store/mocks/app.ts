@@ -7,6 +7,7 @@ export const createMockAppState = (opts?: Partial<AppState>): AppState => ({
   isErrorDiagnosticsOpen: false,
   tempStorage: {
     "last-opened-onboarding-checklist-item": undefined,
+    "trial-banner-dismissal-timestamp": undefined,
   },
   ...opts,
 });

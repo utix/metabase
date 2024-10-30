@@ -22,8 +22,8 @@ export interface AppBreadCrumbs {
  * and then later used with the `use-temp-storage` hook.
  */
 export type TempStorage = {
-  "last-opened-onboarding-checklist-item": ChecklistItemValue | undefined;
-  "trial-banner-dismissal-timestamp": number; // unix timestamp
+  "last-opened-onboarding-checklist-item"?: ChecklistItemValue;
+  "trial-banner-dismissal-timestamp"?: number; // unix timestamp
 };
 
 export type TempStorageKey = keyof TempStorage;

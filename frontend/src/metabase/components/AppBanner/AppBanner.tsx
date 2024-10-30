@@ -13,6 +13,12 @@ export const AppBanner = () => {
   const tokenStatus = useSetting("token-status");
   const readOnly = useSetting("read-only-mode");
 
+  const shouldRenderTrialBanner = tokenStatus?.trial && isHosted;
+
+  const paymentStatuses = ["past-due", "unpaid", "invalid"];
+  const shouldRenderPaymentBanner =
+    tokenStatus && paymentStatuses.includes(tokenStatus?.status ?? "");
+
   // Even though both the `tokenStatus` and `readOnly` settings
   // are visible only to admins (and will be `undefined` otherwise),
   // we still need to explicitly prevent rendering the banner for non-admins.
@@ -24,21 +30,12 @@ export const AppBanner = () => {
     return <ReadOnlyBanner />;
   }
 
-  if (tokenStatus) {
-    const shouldRenderTrialBanner = tokenStatus.trial && isHosted;
+  if (shouldRenderTrialBanner) {
+    return <TrialBanner tokenStatus={tokenStatus} />;
+  }
 
-    const paymentStatuses = ["past-due", "unpaid", "invalid"];
-    const shouldRenderPaymentBanner = paymentStatuses.includes(
-      tokenStatus?.status ?? "",
-    );
-
-    if (shouldRenderTrialBanner) {
-      return <TrialBanner tokenStatus={tokenStatus} />;
-    }
-
-    if (shouldRenderPaymentBanner) {
-      return <PaymentBanner tokenStatus={tokenStatus} />;
-    }
+  if (shouldRenderPaymentBanner) {
+    return <PaymentBanner tokenStatus={tokenStatus} />;
   }
 
   // Do not render to admins if the specific conditions haven't been met
