@@ -158,6 +158,13 @@ export type VisualizationSettings = {
   // Use `getColumnSettings` which checks for both keys.
   column_settings?: Record<string, ColumnSettings>;
 
+  // Pivot table
+  "pivot_table.column_split"?: {
+    columns: FieldReference[];
+    rows: FieldReference[];
+    values: FieldReference[];
+  };
+
   // X-axis
   "graph.x_axis.title_text"?: string;
   "graph.x_axis.scale"?: XAxisScale;
