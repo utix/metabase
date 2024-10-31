@@ -1,5 +1,6 @@
 export const DRAGGABLE_ID = {
   COLUMN: "COLUMN",
+  VIZ_SETTING_COLUMN: "VIZ_SETTING_COLUMN",
 };
 
 export const DROPPABLE_ID = {

@@ -40,7 +40,16 @@ export type DraggedColumn = BaseDraggedItem<{
   dataSource: VisualizerDataSource;
 }>;
 
-export type DraggedItem = DraggedColumn;
+export type DraggedVizSettingColumn = BaseDraggedItem<{
+  type: "VIZ_SETTING_COLUMN";
+  column: DatasetColumn;
+
+  // string[] for nested settings like:
+  // ["pivot_table.column_split", "rows"]
+  vizSettingKey: string | string[];
+}>;
+
+export type DraggedItem = DraggedColumn | DraggedVizSettingColumn;
 
 export interface VisualizerState {
   display: VisualizationDisplay | null;
