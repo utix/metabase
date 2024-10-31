@@ -394,7 +394,7 @@
                     {perm-type (Permissions perm-type)})))
   (if (is-superuser? user-id)
     (most-permissive-value perm-type)
-    ;; The schema-level permission is the most-restrictive table-level permission within a schema. So for each group,
+    ;; The DB-level permission is the most-restrictive table-level permission within a DB schema. So for each group,
     ;; select the most-restrictive table-level permission. Then use normal coalesce logic to select the *least*
     ;; restrictive group permission.
     (let [perm-values (most-restrictive-per-group
@@ -874,9 +874,6 @@
   (when (not= :model/Table (model-by-perm-type perm-type))
     (throw (ex-info (tru "Permission type {0} cannot be set on tables." perm-type)
                     {perm-type (Permissions perm-type)})))
-  (when (= value :blocked)
-    (throw (ex-info (tru "Block permissions must be set at the database-level only.")
-                    {})))
   (when (seq groups-or-ids)
     (t2/with-transaction [_conn]
       (let [group-ids          (map u/the-id groups-or-ids)
