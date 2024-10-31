@@ -793,6 +793,7 @@ class TableInteractive extends Component {
       question,
       mode,
       theme,
+      onActionDismissal,
     } = this.props;
 
     const { dragColIndex, showDetailShortcut } = this.state;
@@ -836,6 +837,7 @@ class TableInteractive extends Component {
             dragColStyle: style,
             dragColNewIndex: columnIndex,
           });
+          onActionDismissal();
         }}
         onDrag={(e, data) => {
           const newIndex = this.getDragColNewIndex(data);
