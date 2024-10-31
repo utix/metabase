@@ -1,4 +1,4 @@
-import { getIn } from "icepick";
+// import { getIn } from "icepick";
 import { t } from "ttag";
 import _ from "underscore";
 
@@ -10,13 +10,13 @@ import {
   COLUMN_SORT_ORDER_ASC,
   COLUMN_SORT_ORDER_DESC,
   COLUMN_SPLIT_SETTING,
-  isPivotGroupColumn,
+  // isPivotGroupColumn,
 } from "metabase/lib/data_grid";
 import { formatColumn } from "metabase/lib/formatting";
 import { ChartSettingIconRadio } from "metabase/visualizations/components/settings/ChartSettingIconRadio";
 import { ChartSettingsTableFormatting } from "metabase/visualizations/components/settings/ChartSettingsTableFormatting";
 import { columnSettings } from "metabase/visualizations/lib/settings/column";
-import { isDimension } from "metabase-lib/v1/types/utils/isa";
+// import { isDimension } from "metabase-lib/v1/types/utils/isa";
 import type {
   Card,
   DatasetColumn,
@@ -27,12 +27,12 @@ import type {
 } from "metabase-types/api";
 
 import { partitions } from "./partitions";
-import type { PivotSetting } from "./types";
+// import type { PivotSetting } from "./types";
 import {
-  addMissingCardBreakouts,
+  // addMissingCardBreakouts,
   isColumnValid,
   isFormattablePivotColumn,
-  updateValueWithCurrentColumns,
+  // updateValueWithCurrentColumns,
 } from "./utils";
 
 export const getTitleForColumn = (
@@ -85,50 +85,50 @@ export const settings = {
       },
     }),
     getValue: (
-      [{ data, card }]: [{ data: DatasetData; card: Card }],
+      [{ data }]: [{ data: DatasetData; card: Card }],
       settings: Partial<VisualizationSettings> = {},
     ) => {
       const storedValue = settings[COLUMN_SPLIT_SETTING];
       if (data == null) {
         return undefined;
       }
-      const columnsToPartition = data.cols.filter(
-        col => !isPivotGroupColumn(col),
-      );
-      let setting;
-      if (storedValue == null) {
-        const [dimensions, values] = _.partition(
-          columnsToPartition,
-          isDimension,
-        );
-        const [first, second, ...rest] = _.sortBy(dimensions, col =>
-          getIn(col, ["fingerprint", "global", "distinct-count"]),
-        );
+      return storedValue;
+      // const columnsToPartition = data.cols.filter(
+      //   col => !isPivotGroupColumn(col),
+      // );
+      // let setting;
+      // if (storedValue == null) {
+      //   const [dimensions, values] = _.partition(
+      //     columnsToPartition,
+      //     isDimension,
+      //   );
+      //   const [first, second, ...rest] = _.sortBy(dimensions, col =>
+      //     getIn(col, ["fingerprint", "global", "distinct-count"]),
+      //   );
 
-        let rows;
-        let columns: DatasetColumn[];
+      //   let rows;
+      //   let columns: DatasetColumn[];
 
-        if (dimensions.length < 2) {
-          columns = [];
-          rows = [first];
-        } else if (dimensions.length <= 3) {
-          columns = [first];
-          rows = [second, ...rest];
-        } else {
-          columns = [first, second];
-          rows = rest;
-        }
-        setting = _.mapObject({ rows, columns, values }, cols =>
-          cols.map(col => col.field_ref),
-        );
-      } else {
-        setting = updateValueWithCurrentColumns(
-          storedValue,
-          columnsToPartition,
-        );
-      }
-
-      return addMissingCardBreakouts(setting as PivotSetting, card);
+      //   if (dimensions.length < 2) {
+      //     columns = [];
+      //     rows = [first];
+      //   } else if (dimensions.length <= 3) {
+      //     columns = [first];
+      //     rows = [second, ...rest];
+      //   } else {
+      //     columns = [first, second];
+      //     rows = rest;
+      //   }
+      //   setting = _.mapObject({ rows, columns, values }, cols =>
+      //     cols.map(col => col.field_ref),
+      //   );
+      // } else {
+      //   setting = updateValueWithCurrentColumns(
+      //     storedValue,
+      //     columnsToPartition,
+      //   );
+      // }
+      // return addMissingCardBreakouts(setting as PivotSetting, card);
     },
   },
   "pivot.show_row_totals": {
