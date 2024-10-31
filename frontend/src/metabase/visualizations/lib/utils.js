@@ -445,7 +445,7 @@ export const getDefaultPivotColumn = (cols, rows) => {
   );
 };
 
-const MAX_SANKEY_COLUMN_PAIRS_TO_CHECK = 3;
+const MAX_SANKEY_COLUMN_PAIRS_TO_CHECK = 6;
 
 function findSankeyColumnPair(dimensionColumns, rows) {
   if (dimensionColumns.length < 2) {
