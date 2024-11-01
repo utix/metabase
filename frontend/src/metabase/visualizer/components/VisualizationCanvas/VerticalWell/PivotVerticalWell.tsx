@@ -125,6 +125,8 @@ const WellBox = forwardRef<HTMLDivElement, WellBoxProps>(function WellBox(
       p="md"
       gap="sm"
       wrap="nowrap"
+      w="190px"
+      mih="90px"
       style={{
         borderRadius: "var(--default-border-radius)",
         border: `1px solid ${borderColor}`,
