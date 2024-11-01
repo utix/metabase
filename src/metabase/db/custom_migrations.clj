@@ -1660,3 +1660,58 @@
                                                           :is_optional true})}
                          {:type                 "notification-recipient/group"
                           :permissions_group_id (t2/select-one-pk :permissions_group :name "Administrators")}]}])))
+
+(defn- column->name
+  [column]
+  (get column "name"))
+
+(defn- column->field-ref
+  [column]
+  (get column "field-ref"))
+
+(defn- update-legacy-pivot-viz-settings
+  "TBD"
+  [viz-settings result-metadata old-key-fn new-key-fn]
+  (let [paths       [["pivot_table.column_split" "rows"]
+                     ["pivot_table.column_split" "columns"]
+                     ["pivot_table.column_split" "values"]
+                     ["pivot_table.collapsed_rows" "rows"]]
+        key->column (m/index-by old-key-fn result-metadata)]
+    (reduce (fn [settings path]
+              (let [old-value (get-in settings path [])
+                    new-value (mapv (fn [key] (some-> (get key->column key) new-key-fn)) old-value)]
+                (if (and (not-empty new-value) (every? some? new-value))
+                  (assoc-in settings path new-value)
+                  (m/dissoc-in settings path))))
+            viz-settings
+            paths)))
+
+(defn migrate-legacy-pivot-viz-settings
+  "TBD"
+  [viz-settings result-metadata]
+  (update-legacy-pivot-viz-settings viz-settings result-metadata column->field-ref column->name))
+
+(defn rollback-legacy-pivot-viz-settings
+  "TBD"
+  [viz-settings result-metadata]
+  (update-legacy-pivot-viz-settings viz-settings result-metadata column->name column->field-ref))
+
+(defn- update-legacy-card-pivot-viz-settings
+  "TBD"
+  [update-viz-settings-fn]
+  (let [update-one! (fn [{id :id viz-settings :visualization_settings result-metadata :result_metadata}]
+                      (let [viz-settings         (json/parse-string viz-settings)
+                            result-metadata      (json/parse-string result-metadata)
+                            updated-viz-settings (update-viz-settings-fn viz-settings result-metadata)]
+                        (when (not= viz-settings updated-viz-settings)
+                          (t2/query-one {:update :report_card
+                                         :set    {:visualization_settings (json/generate-string updated-viz-settings)}
+                                         :where  [:= :id id]}))))]
+    (run! update-one! (t2/reducible-query {:select [:id :visualization_settings :result_metadata]
+                                           :from   [:report_card]
+                                           :where  [:or [:like :visualization_settings "%pivot_table.column_split%"]
+                                                        [:like :visualization_settings "%pivot_table.collapsed_rows%"]]}))))
+
+(define-reversible-migration MigrateLegacyCardPivotVizSettings
+  (update-legacy-card-pivot-viz-settings migrate-legacy-pivot-viz-settings)
+  (update-legacy-card-pivot-viz-settings rollback-legacy-pivot-viz-settings))
