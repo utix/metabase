@@ -1,3 +1,4 @@
+import cx from "classnames";
 import type React from "react";
 import { t } from "ttag";
 
@@ -15,6 +16,7 @@ interface SidesheetProps {
   children: React.ReactNode;
   /** use this if you want to enable interior scrolling of tab panels */
   removeBodyPadding?: boolean;
+  shouldShowOverlay?: boolean;
 }
 
 const sizes: Record<SidesheetSize, string> = {
@@ -33,17 +35,18 @@ export function Sidesheet({
   size = "sm",
   children,
   removeBodyPadding,
+  shouldShowOverlay = true,
 }: SidesheetProps) {
   return (
     <Modal.Root opened={isOpen} onClose={onClose} h="100dvh">
-      <Modal.Overlay data-testid="modal-overlay" />
+      {shouldShowOverlay && <Modal.Overlay data-testid="modal-overlay" />}
       <Modal.Content
-        transitionProps={{ transition: "slide-left" }}
+        transitionProps={{ duration: 0 }}
         px="none"
         w={sizes[size]}
         bg="bg-light"
         data-testid="sidesheet"
-        className={Styles.SidesheetContent}
+        className={cx(Styles.SidesheetContent)}
       >
         <Modal.Header bg="bg-light" px="xl">
           {title && (

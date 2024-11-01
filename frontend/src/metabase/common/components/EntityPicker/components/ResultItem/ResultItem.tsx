@@ -8,7 +8,6 @@ import { getName } from "metabase/lib/name";
 import { FixedSizeIcon, Flex, Tooltip } from "metabase/ui";
 
 import type { SearchItem } from "../../types";
-import { ENTITY_PICKER_Z_INDEX } from "../EntityPickerModal";
 
 import { ChunkyListItem } from "./ResultItem.styled";
 
@@ -47,12 +46,7 @@ export const ResultItem = ({
           {getName(item)}
         </Ellipsified>
         {item.description && (
-          <Tooltip
-            maw="20rem"
-            multiline
-            label={item.description}
-            zIndex={ENTITY_PICKER_Z_INDEX}
-          >
+          <Tooltip maw="20rem" multiline label={item.description}>
             <FixedSizeIcon color="brand" name="info" />
           </Tooltip>
         )}

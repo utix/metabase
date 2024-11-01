@@ -45,6 +45,7 @@ export const SidesheetSubPage = ({
     title={<SidesheetSubPageTitle title={title} onClick={onBack} />}
     onClose={onClose}
     size={size}
+    shouldShowOverlay={false}
   >
     {children}
   </Sidesheet>

@@ -1,7 +1,7 @@
 import type { MantineThemeOverride } from "@mantine/core";
 import type { SyntheticEvent } from "react";
 
-export const DEFAULT_POPOVER_Z_INDEX = 300;
+import ZIndex from "metabase/css/core/z-index.module.css";
 
 export const getPopoverOverrides = (): MantineThemeOverride["components"] => ({
   Popover: {
@@ -11,12 +11,14 @@ export const getPopoverOverrides = (): MantineThemeOverride["components"] => ({
       withinPortal: true,
       middlewares: { shift: true, flip: true, size: true },
       transitionProps: { duration: 0 },
+      zIndex: "var(--mb-floating-element-z-index)",
     },
+    // FIXME: This class might not be doing anything
+    classNames: { dropdown: ZIndex.PopoverDropdown },
     styles: () => ({
       dropdown: {
         padding: 0,
         overflow: "auto",
-        background: "var(--mb-color-background)",
         borderColor: "var(--mb-color-border)",
         color: "var(--mb-color-text-primary)",
       },

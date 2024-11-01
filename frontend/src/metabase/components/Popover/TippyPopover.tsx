@@ -6,7 +6,7 @@ import type * as tippy from "tippy.js";
 
 import { EMBEDDING_SDK_PORTAL_ROOT_ELEMENT_ID } from "embedding-sdk/config";
 import EventSandbox from "metabase/components/EventSandbox";
-import { DEFAULT_Z_INDEX } from "metabase/components/Popover/constants";
+import ZIndex from "metabase/css/core/z-index.module.css";
 import { isCypressActive } from "metabase/env";
 import useSequencedContentCloseHandler from "metabase/hooks/use-sequenced-content-close-handler";
 import { isReducedMotionPreferred } from "metabase/lib/dom";
@@ -87,7 +87,6 @@ function TippyPopover({
   const isControlled = props.visible != null;
 
   const theme = useMantineTheme();
-  const { zIndex = DEFAULT_Z_INDEX } = theme.other.popover ?? {};
 
   const { setupCloseHandler, removeCloseHandler } =
     useSequencedContentCloseHandler();
@@ -134,9 +133,18 @@ function TippyPopover({
     [flip, sizeToFit, popperOptions],
   );
 
+  const zIndex =
+    theme.other.popover?.zIndex ||
+    ("var(--mb-floating-element-z-index)" as unknown as number);
+
   return (
     <TippyComponent
-      className={cx("popover", className)}
+      className={cx(
+        "popover",
+        // FIXME: Is the theme popover zindex respected here?
+        ZIndex.FloatingElement,
+        className,
+      )}
       theme="popover"
       zIndex={zIndex}
       arrow={false}
@@ -151,7 +159,7 @@ function TippyPopover({
       content={
         shouldShowContent ? (
           <EventSandbox disabled={disableContentSandbox}>
-            {content}
+            <div style={{ zIndex: zIndex }}>{content}</div>
           </EventSandbox>
         ) : null
       }

@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from "react";
 
 import Tooltip from "metabase/core/components/Tooltip";
+import ZIndex from "metabase/css/core/z-index.module.css";
 import type { ColorName } from "metabase/lib/colors/types";
 import type { IconName } from "metabase/ui";
 
@@ -117,7 +118,11 @@ const LinkMenuItem = ({
   children,
   onClose,
 }: LinkMenuItemProps): JSX.Element => (
-  <Tooltip tooltip={tooltip} placement="right">
+  <Tooltip
+    tooltip={tooltip}
+    placement="right"
+    className={ZIndex.FloatingElement}
+  >
     {externalLink ? (
       <MenuExternalLink
         href={link}

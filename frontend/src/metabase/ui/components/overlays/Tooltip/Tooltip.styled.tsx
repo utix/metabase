@@ -15,6 +15,7 @@ export const getTooltipOverrides = (): MantineThemeOverride["components"] => ({
         focus: true,
         touch: true,
       },
+      zIndex: "var(--mb-floating-element-z-index)",
     },
     styles: theme => ({
       tooltip: {

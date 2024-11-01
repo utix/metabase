@@ -1,0 +1,3 @@
+.BulkActionsToast {
+  composes: popToast from "style";
+}

@@ -53,7 +53,16 @@ export class WindowModal extends Component<WindowModalProps> {
     if (props.zIndex != null) {
       this._modalElement.style.zIndex = String(props.zIndex);
     }
-    document.body.appendChild(this._modalElement);
+
+    if (props.isOpen) {
+      document.body.appendChild(this._modalElement);
+    }
+  }
+
+  componentDidUpdate(prevProps: WindowModalProps) {
+    if (!prevProps.isOpen && this.props.isOpen) {
+      document.body.appendChild(this._modalElement);
+    }
   }
 
   componentWillUnmount() {
