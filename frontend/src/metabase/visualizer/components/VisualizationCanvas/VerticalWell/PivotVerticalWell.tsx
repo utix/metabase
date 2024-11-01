@@ -58,6 +58,7 @@ export function PivotVerticalWell({ settings }: PivotVerticalWellProps) {
             key={rowCol.name}
             canDrag={rows.length > 1}
             column={rowCol}
+            groupName="pivot_rows"
             vizSettingKey={["pivot_table.column_split", "rows"]}
           >
             <Text truncate>{rowCol.display_name}</Text>
@@ -74,6 +75,7 @@ export function PivotVerticalWell({ settings }: PivotVerticalWellProps) {
             key={col.name}
             canDrag={cols.length > 1}
             column={col}
+            groupName="pivot_cols"
             vizSettingKey={["pivot_table.column_split", "columns"]}
           >
             <Text key={col.name} truncate>
@@ -92,6 +94,7 @@ export function PivotVerticalWell({ settings }: PivotVerticalWellProps) {
             key={valueCol.name}
             canDrag={values.length > 1}
             column={valueCol}
+            groupName="pivot_values"
             vizSettingKey={["pivot_table.column_split", "values"]}
           >
             <Text truncate>{valueCol.display_name}</Text>
@@ -144,17 +147,19 @@ const WellBox = forwardRef<HTMLDivElement, WellBoxProps>(function WellBox(
 interface DraggableWellItemProps extends BoxProps {
   canDrag: boolean;
   column: DatasetColumn;
+  groupName: string;
   vizSettingKey: string[];
 }
 
 function DraggableWellItem({
   canDrag,
   column,
+  groupName,
   vizSettingKey,
   ...props
 }: DraggableWellItemProps) {
   const { attributes, listeners, isDragging, setNodeRef } = useDraggable({
-    id: `${DRAGGABLE_ID.VIZ_SETTING_COLUMN}:${column.name}`,
+    id: `${groupName}:${DRAGGABLE_ID.VIZ_SETTING_COLUMN}:${column.name}`,
     data: {
       type: DRAGGABLE_ID.VIZ_SETTING_COLUMN,
       column,

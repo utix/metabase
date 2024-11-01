@@ -124,6 +124,15 @@ const visualizerSlice = createSlice({
           );
         }
       }
+
+      if (state.display === "pivot") {
+        state.columns.push({
+          ...column,
+          name: columnRef.name,
+          values: [column.name],
+          source: column.source === "breakout" ? "breakout" : "artificial",
+        });
+      }
     },
     setDisplay: (state, action: PayloadAction<VisualizationDisplay | null>) => {
       const display = action.payload;
@@ -141,6 +150,21 @@ const visualizerSlice = createSlice({
           "funnel.metric": metric.name,
           "funnel.dimension": dimension.name,
         };
+      }
+
+      if (display === "pivot") {
+        state.columns = [
+          {
+            base_type: "type/Integer",
+            effective_type: "type/Integer",
+            display_name: "pivot-grouping",
+            name: "pivot-grouping",
+            expression_name: "pivot-grouping",
+            field_ref: ["expression", "pivot-grouping"],
+            source: "artificial",
+            values: ["pivot-grouping"],
+          },
+        ];
       }
     },
     updateSettings: (state, action: PayloadAction<VisualizationSettings>) => {
@@ -359,10 +383,10 @@ const getVisualizerDatasetData = createSelector(
     getVisualizationColumns,
   ],
   (usedDataSources, datasets, referencedColumns, cols): Dataset => {
-    if (usedDataSources.length === 1) {
-      const [source] = usedDataSources;
-      return datasets[source.id]?.data;
-    }
+    // if (usedDataSources.length === 1) {
+    //   const [source] = usedDataSources;
+    //   return datasets[source.id]?.data;
+    // }
 
     const referencedColumnValuesMap: Record<string, RowValues> = {};
     referencedColumns.forEach(ref => {
@@ -396,6 +420,17 @@ const getVisualizerDatasetData = createSelector(
         })
         .flat(),
     );
+
+    const hasPivotGrouping = cols.find(col => col.name === "pivot-grouping");
+    if (hasPivotGrouping) {
+      const rowLengths = Object.values(referencedColumnValuesMap).map(
+        values => values.length,
+      );
+      const maxLength = rowLengths.length > 0 ? Math.max(...rowLengths) : 0;
+      referencedColumnValuesMap["pivot-grouping"] = new Array(maxLength).fill(
+        0,
+      );
+    }
 
     return {
       cols,

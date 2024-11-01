@@ -84,6 +84,7 @@ export function isColumnValid(col: DatasetColumn) {
   return (
     col.source === "aggregation" ||
     col.source === "breakout" ||
+    col.source === "artificial" ||
     isPivotGroupColumn(col)
   );
 }

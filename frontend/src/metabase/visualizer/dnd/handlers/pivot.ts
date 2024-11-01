@@ -1,7 +1,7 @@
 import { assocIn, getIn } from "icepick";
 import _ from "underscore";
 
-import { updateSettings } from "../../visualizer.slice";
+import { importColumn, updateSettings } from "../../visualizer.slice";
 import { DROPPABLE_ID } from "../constants";
 import { isDraggedColumnItem, isDraggedVizSettingColumnItem } from "../guards";
 
@@ -15,12 +15,15 @@ export function pivotDropHandler({
   const { active, over } = event;
 
   if (over && isDraggedColumnItem(active)) {
-    const { column } = active.data.current;
+    const { column, dataSource } = active.data.current;
     if (over.id === DROPPABLE_ID.PIVOT_COLUMNS_WELL) {
       const columns = settings["pivot_table.column_split"]?.columns ?? [];
       const hasColumn = columns.some(fieldRef =>
         _.isEqual(fieldRef, column.field_ref),
       );
+      if (!hasColumn) {
+        dispatch(importColumn({ column, dataSource }));
+      }
       dispatch(
         updateSettings({
           "pivot_table.column_split": {
@@ -34,6 +37,9 @@ export function pivotDropHandler({
       const hasColumn = rows.some(fieldRef =>
         _.isEqual(fieldRef, column.field_ref),
       );
+      if (!hasColumn) {
+        dispatch(importColumn({ column, dataSource }));
+      }
       dispatch(
         updateSettings({
           "pivot_table.column_split": {
@@ -47,6 +53,9 @@ export function pivotDropHandler({
       const hasColumn = values.some(fieldRef =>
         _.isEqual(fieldRef, column.field_ref),
       );
+      if (!hasColumn) {
+        dispatch(importColumn({ column, dataSource }));
+      }
       dispatch(
         updateSettings({
           "pivot_table.column_split": {
