@@ -1667,7 +1667,7 @@
 
 (defn- column->field-ref
   [column]
-  (get column "field-ref"))
+  (get column "field_ref"))
 
 (defn- update-legacy-pivot-viz-settings
   "TBD"
